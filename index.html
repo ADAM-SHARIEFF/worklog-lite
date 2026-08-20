@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#A78BDB">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="WorkLog">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>WorkLog Lite</title>
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('worklog-lite-data-v1');
+    var dark = false;
+    if(raw){
+      var parsed = JSON.parse(raw);
+      dark = !!(parsed.settings && parsed.settings.darkMode);
+    } else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+      dark = true;
+    }
+    if(dark) document.documentElement.style.colorScheme = 'dark';
+    window.__wlDarkPreload = dark;
+  }catch(e){}
+})();
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23C9B8ED'/%3E%3Ccircle cx='50' cy='50' r='28' fill='%23FBFAFF'/%3E%3Cpath d='M50 34v16l12 8' stroke='%23A78BDB' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBFAFF;
+    --card:#FFFFFF;
+    --field-bg:#FCFBFF;
+    --lavender:#EAE2F8;
+    --lavender-deep:#A78BDB;
+    --lavender-darker:#6F5BA8;
+    --pink:#FCE4EC;
+    --pink-deep:#F3A6BE;
+    --pink-darker:#B4548A;
+    --blue:#E1F0FB;
+    --blue-deep:#8FC6E8;
+    --blue-darker:#3E7FA6;
+    --green:#E3F4E8;
+    --green-deep:#8FCF9F;
+    --green-darker:#3F8A57;
+    --gold:#FBEFD9;
+    --gold-deep:#EAC178;
+    --gold-darker:#96731F;
+    --stat6-bg:#F1EEFB;
+    --stat6-text:#6F5BA8;
+    --ink:#4A4459;
+    --ink-light:#8A8299;
+    --ink-faint:#C4BDD3;
+    --line: #ECE7F7;
+    --overlay: rgba(74,68,89,0.35);
+    --radius-lg:26px;
+    --radius-md:18px;
+    --radius-sm:12px;
+    --shadow: 0 6px 20px rgba(140, 120, 180, 0.12);
+    --shadow-sm: 0 3px 10px rgba(140, 120, 180, 0.10);
+    --body-gradient: linear-gradient(180deg, #F4EEFC 0%, #FBFAFF 220px, #FBFAFF 100%);
+  }
+  body.dark{
+    --bg:#1E1B2E;
+    --card:#282438;
+    --field-bg:#231F33;
+    --lavender:#332C48;
+    --lavender-deep:#A78BDB;
+    --lavender-darker:#CBBBEF;
+    --pink:#3B2A38;
+    --pink-deep:#E797B2;
+    --pink-darker:#F3C2D5;
+    --blue:#212B3B;
+    --blue-deep:#84BEE3;
+    --blue-darker:#BFE0F5;
+    --green:#1F3227;
+    --green-deep:#82C594;
+    --green-darker:#B9E5C4;
+    --gold:#332A17;
+    --gold-deep:#E0B565;
+    --gold-darker:#F1D69C;
+    --stat6-bg:#2E2A45;
+    --stat6-text:#CBBBEF;
+    --ink:#EEEAF8;
+    --ink-light:#AFA6C7;
+    --ink-faint:#655D7C;
+    --line: #383152;
+    --overlay: rgba(10,8,18,0.55);
+    --shadow: 0 6px 20px rgba(0,0,0,0.35);
+    --shadow-sm: 0 3px 10px rgba(0,0,0,0.28);
+    --body-gradient: linear-gradient(180deg, #241F38 0%, #1E1B2E 220px, #1E1B2E 100%);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background: var(--body-gradient);
+    font-family:'Nunito', sans-serif;
+    color: var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    transition: background .2s ease, color .2s ease;
+  }
+  h1,h2,h3,.display{font-family:'Quicksand', sans-serif; font-weight:700;}
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom: 92px;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 22px 20px 6px;
+  }
+  .topbar .mark{
+    width:38px; height:38px; border-radius:12px;
+    background: linear-gradient(135deg, var(--lavender-deep), var(--pink-deep));
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .topbar .mark svg{width:20px; height:20px;}
+  .topbar .title{font-size:20px; font-weight:700; color: var(--ink);}
+  .topbar .subtitle{font-size:12.5px; color: var(--ink-light); margin-top:-2px;}
+
+  .view{padding: 6px 20px 8px; flex:1; display:flex; flex-direction:column; gap:16px;}
+  .hidden{display:none !important;}
+
+  .card{
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ---------- HOME ---------- */
+  .clock-card{
+    background: linear-gradient(135deg, var(--lavender) 0%, var(--pink) 100%);
+    border-radius: var(--radius-lg);
+    padding: 22px 22px;
+    box-shadow: var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  .clock-card .greet{font-size:13.5px; color: var(--ink-light); font-weight:700; letter-spacing:.2px;}
+  .clock-card .time{font-size:40px; font-weight:700; font-family:'Quicksand'; color: var(--lavender-darker); line-height:1.15; font-variant-numeric: tabular-nums;}
+  .clock-card .date{font-size:13.5px; color: var(--ink-light); margin-top:2px; font-weight:600;}
+
+  .active-banner{
+    background: linear-gradient(135deg, var(--pink) 0%, var(--card) 100%);
+    border: 1.5px solid var(--pink-deep);
+    border-radius: var(--radius-md);
+    padding:14px 16px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .dot{width:9px; height:9px; border-radius:50%; background: var(--pink-darker); flex-shrink:0; animation: pulse 1.6s infinite;}
+  @keyframes pulse{0%{opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(1.3);} 100%{opacity:1; transform:scale(1);}}
+  .active-banner .txt{flex:1;}
+  .active-banner .lbl{font-size:12.5px; color: var(--pink-darker); font-weight:800;}
+  .active-banner .elapsed{font-size:19px; font-weight:700; font-family:'Quicksand'; color: var(--ink); font-variant-numeric: tabular-nums;}
+  .btn-mini{
+    border:none; background: var(--pink-deep); color:#fff; font-family:'Nunito'; font-weight:800;
+    font-size:13px; padding: 9px 14px; border-radius: 12px; cursor:pointer;
+  }
+  .btn-mini:active{transform: scale(0.96);}
+
+  .section-label{font-size:13px; font-weight:800; color: var(--ink-light); text-transform:uppercase; letter-spacing:.5px; margin: 2px 2px 0;}
+
+  .chip-row{display:flex; gap:10px;}
+  .chip{
+    flex:1; text-align:center; padding: 13px 8px; border-radius: 16px; border: 1.5px solid var(--line);
+    background: var(--card); font-weight:800; font-size:14.5px; color: var(--ink-light); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+  }
+  .chip svg{width:17px; height:17px; opacity:.55;}
+  .chip.active{border-color: transparent; color:#fff;}
+  .chip.active svg{opacity:1; filter: brightness(0) invert(1);}
+  .chip[data-loc="home"].active{background: linear-gradient(135deg, var(--blue-deep), #79B4DC);}
+  .chip[data-loc="office"].active{background: linear-gradient(135deg, var(--pink-deep), #E890AC);}
+  .chip[data-act="login"].active{background: linear-gradient(135deg, var(--green-deep), #74C287);}
+  .chip[data-act="logout"].active{background: linear-gradient(135deg, var(--lavender-deep), #8F79C9);}
+
+  .chip-row.daytype-row{gap:8px;}
+  .chip.daytype{font-size:13px; padding:11px 6px;}
+  .chip[data-daytype="normal"].active{background: linear-gradient(135deg, var(--blue-deep), #79B4DC);}
+  .chip[data-daytype="comp"].active{background: linear-gradient(135deg, #E0A63A, #F0C46B);}
+  .chip[data-daytype="weekoff"].active{background: linear-gradient(135deg, var(--pink-deep), #E890AC);}
+
+  .field-block.disabled, .chip-row.disabled{opacity:.4; pointer-events:none; filter:grayscale(.4); transition:opacity .18s ease;}
+
+  .field-row{display:flex; gap:10px;}
+  .field{flex:1; display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:12px; font-weight:800; color: var(--ink-light); padding-left:2px;}
+  input[type="date"], input[type="time"], input[type="number"]{
+    border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 12px; font-size:15px;
+    font-family:'Nunito'; font-weight:700; color: var(--ink); background:var(--field-bg); width:100%;
+  }
+  input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus{outline: none; border-color: var(--lavender-deep);}
+
+  .btn-submit{
+    border:none; width:100%; padding:16px; border-radius: 18px; font-family:'Quicksand'; font-weight:700; font-size:16.5px;
+    color:#fff; background: linear-gradient(135deg, var(--lavender-deep), var(--pink-deep)); cursor:pointer;
+    box-shadow: 0 8px 18px rgba(167,139,219,0.35);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-submit:active{transform: scale(0.98);}
+
+  .today-card .today-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .today-card .today-head .lbl{font-size:14px; font-weight:800; color:var(--ink);}
+  .today-card .today-head .val{font-size:14px; font-weight:800; color: var(--lavender-darker); font-variant-numeric: tabular-nums;}
+
+  /* ---------- RIBBON ---------- */
+  .ribbon-wrap{position:relative; height:16px; border-radius:10px; background: var(--line); overflow:hidden;}
+  .ribbon-seg{position:absolute; top:0; bottom:0; border-radius: 0;}
+  .ribbon-seg.home{background: var(--blue-deep);}
+  .ribbon-seg.office{background: var(--pink-deep);}
+  .ribbon-seg:first-child{border-top-left-radius:10px; border-bottom-left-radius:10px;}
+  .ribbon-stripe{position:absolute; top:0; bottom:0; right:0;
+    background: repeating-linear-gradient(45deg, var(--gold-deep) 0px, var(--gold-deep) 4px, rgba(255,255,255,0.55) 4px, rgba(255,255,255,0.55) 8px);
+    border-top-right-radius:10px; border-bottom-right-radius:10px;
+  }
+  .ribbon-marker{position:absolute; top:-3px; bottom:-3px; width:2px; background: var(--ink); opacity:.35;}
+  .ribbon-legend{display:flex; gap:14px; margin-top:8px; flex-wrap:wrap;}
+  .ribbon-legend span{font-size:11.5px; color: var(--ink-light); font-weight:700; display:flex; align-items:center; gap:5px;}
+  .ribbon-legend .sw{width:9px; height:9px; border-radius:3px; display:inline-block;}
+
+  .empty{
+    text-align:center; padding: 26px 10px; color: var(--ink-light);
+  }
+  .empty .emoji{font-size:26px; margin-bottom:6px;}
+  .empty .msg{font-size:14px; font-weight:700; line-height:1.5;}
+
+  /* ---------- NAV ---------- */
+  .bottomnav{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px; background: var(--card); border-top: 1px solid var(--line);
+    display:flex; padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 20px rgba(140,120,180,0.10);
+  }
+  .navbtn{
+    flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:8px 4px; cursor:pointer; color: var(--ink-faint);
+  }
+  .navbtn svg{width:22px; height:22px;}
+  .navbtn .lbl{font-size:11px; font-weight:800;}
+  .navbtn.active{color: var(--lavender-deep);}
+
+  /* ---------- OVERVIEW ---------- */
+  .month-switch{display:flex; align-items:center; justify-content:space-between; padding: 4px 4px;}
+  .month-switch .m-title{font-size:18px; font-weight:700; font-family:'Quicksand';}
+  .month-btn{border:none; background: var(--lavender); width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .month-btn svg{width:16px; height:16px;}
+
+  .stat-grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+  .stat-card{border-radius: var(--radius-md); padding:15px 16px; box-shadow: var(--shadow-sm);}
+  .stat-card .num{font-size:23px; font-weight:700; font-family:'Quicksand'; font-variant-numeric: tabular-nums;}
+  .stat-card .lbl{font-size:12px; font-weight:800; margin-top:2px;}
+  .stat-card.c1{background: var(--lavender);} .stat-card.c1 .num{color:var(--lavender-darker);} .stat-card.c1 .lbl{color:var(--lavender-darker); opacity:.8;}
+  .stat-card.c2{background: var(--green);} .stat-card.c2 .num{color:var(--green-darker);} .stat-card.c2 .lbl{color:var(--green-darker); opacity:.8;}
+  .stat-card.c3{background: var(--gold);} .stat-card.c3 .num{color:var(--gold-darker);} .stat-card.c3 .lbl{color:var(--gold-darker); opacity:.8;}
+  .stat-card.c4{background: var(--blue);} .stat-card.c4 .num{color:var(--blue-darker);} .stat-card.c4 .lbl{color:var(--blue-darker); opacity:.8;}
+  .stat-card.c5{background: var(--pink);} .stat-card.c5 .num{color:var(--pink-darker);} .stat-card.c5 .lbl{color:var(--pink-darker); opacity:.8;}
+  .stat-card.c6{background: var(--stat6-bg);} .stat-card.c6 .num{color:var(--stat6-text);} .stat-card.c6 .lbl{color:var(--stat6-text); opacity:.8;}
+
+  .day-row{
+    display:flex; align-items:center; gap:12px; padding:12px 6px; border-bottom: 1px solid var(--line); cursor:pointer;
+  }
+  .day-row:last-child{border-bottom:none;}
+  .day-row .dnum{width:40px; text-align:center; flex-shrink:0;}
+  .day-row .dnum .d{font-size:17px; font-weight:800; font-family:'Quicksand'; color: var(--ink);}
+  .day-row .dnum .wd{font-size:10px; color: var(--ink-light); font-weight:700; text-transform:uppercase;}
+  .day-row .dmid{flex:1; min-width:0;}
+  .day-row .dtxt{font-size:12.5px; font-weight:700; color: var(--ink-light); margin-bottom:5px; display:flex; gap:6px; align-items:center;}
+  .day-row .dright{text-align:right; flex-shrink:0;}
+  .day-row .dright .tot{font-size:14.5px; font-weight:800; font-variant-numeric: tabular-nums;}
+  .day-row .dright .sub{font-size:11px; color: var(--ink-light); font-weight:700;}
+  .badge{font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:8px;}
+  .badge.weekoff{background: var(--green); color: var(--green-darker);}
+  .badge.ot{background: var(--gold); color: var(--gold-darker);}
+
+  /* ---------- HISTORY ---------- */
+  .hist-day{background:var(--card); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow:hidden;}
+  .hist-day-head{padding: 15px 18px; display:flex; align-items:center; gap:12px; cursor:pointer;}
+  .hist-day-head .dnum{width:42px; text-align:center; flex-shrink:0;}
+  .hist-day-head .dnum .d{font-size:19px; font-weight:800; font-family:'Quicksand';}
+  .hist-day-head .dnum .wd{font-size:10px; color: var(--ink-light); font-weight:700; text-transform:uppercase;}
+  .hist-day-head .dmid{flex:1; min-width:0;}
+  .hist-day-head .dright{text-align:right;}
+  .hist-day-head .dright .tot{font-size:15px; font-weight:800;}
+  .hist-day-head .chev{width:16px; height:16px; color: var(--ink-faint); transition: transform .2s; flex-shrink:0;}
+  .hist-day-head.open .chev{transform: rotate(180deg);}
+  .hist-day-body{padding: 0 18px 16px; display:none;}
+  .hist-day-body.open{display:block;}
+  .session-row{display:flex; align-items:center; gap:10px; padding: 11px 0; border-top: 1px solid var(--line);}
+  .session-row .sicon{width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .session-row .sicon svg{width:16px; height:16px;}
+  .session-row.loc-home .sicon{background: var(--blue); color: var(--blue-darker);}
+  .session-row.loc-office .sicon{background: var(--pink); color: var(--pink-darker);}
+  .session-row.irregular .sicon{background: var(--gold); color: var(--gold-darker);}
+  .session-row .stxt{flex:1; min-width:0;}
+  .session-row .srange{font-size:14.5px; font-weight:800; font-variant-numeric: tabular-nums;}
+  .session-row .smeta{font-size:11.5px; color: var(--ink-light); font-weight:700; margin-top:1px;}
+  .session-row .sdur{font-size:11.5px; color: var(--lavender-darker); font-weight:800; margin-top:1px;}
+  .session-row .sedit{border:none; background:none; color: var(--ink-faint); cursor:pointer; padding:6px;}
+  .session-row .sedit svg{width:16px; height:16px;}
+  .session-row .sdel{border:none; background:none; color: var(--ink-faint); cursor:pointer; padding:6px;}
+  .session-row .sdel svg{width:16px; height:16px;}
+  .session-row .sdel:active, .session-row .sedit:active{opacity:.6;}
+  .clear-day-btn{border:none; background:none; color:#C25B5B; font-weight:800; font-size:12.5px; cursor:pointer; padding:10px 0 2px; width:100%; text-align:center;}
+
+  .daymeta-row{display:flex; align-items:center; justify-content:space-between; padding-top:14px; margin-top:4px; border-top: 1.5px dashed var(--line); gap:10px;}
+  .toggle-lbl{font-size:12.5px; font-weight:800; color: var(--ink-light); display:flex; align-items:center; gap:8px;}
+  .switch{width:38px; height:22px; border-radius:12px; background: var(--line); position:relative; cursor:pointer; flex-shrink:0;}
+  .switch.on{background: var(--green-deep);}
+  .switch .knob{position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
+  .switch.on .knob{left:18px;}
+  .comp-input{display:flex; align-items:center; gap:8px; margin-top:10px;}
+  .comp-input input{width:70px; text-align:center;}
+  .comp-input label{font-size:12.5px; font-weight:800; color: var(--ink-light);}
+
+  .add-past-btn{
+    width:100%; border: 1.5px dashed var(--ink-faint); background:none; border-radius: var(--radius-md);
+    padding:14px; font-family:'Nunito'; font-weight:800; color: var(--ink-light); font-size:14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+
+  /* ---------- MODAL ---------- */
+  .sheet-overlay{
+    position:fixed; inset:0; background: var(--overlay); z-index:50;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .sheet{
+    width:100%; max-width:480px; background:var(--card); border-radius: 28px 28px 0 0; padding: 10px 22px calc(24px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+    animation: slideup .22s ease-out;
+    max-height:88vh; overflow-y:auto;
+  }
+  @keyframes slideup{from{transform: translateY(30px); opacity:.4;} to{transform: translateY(0); opacity:1;}}
+  .sheet-handle{width:38px; height:5px; background: var(--line); border-radius:4px; margin: 8px auto 14px;}
+  .sheet h3{font-size:18px; margin: 4px 0 16px;}
+  .sheet-actions{display:flex; gap:10px; margin-top:18px;}
+  .btn-secondary{
+    flex:1; border: 1.5px solid var(--line); background:var(--card); border-radius:16px; padding:13px; font-family:'Nunito';
+    font-weight:800; font-size:14.5px; color: var(--ink-light); cursor:pointer;
+  }
+  .btn-danger-text{
+    border:none; background:none; color:#C25B5B; font-weight:800; font-size:13.5px; cursor:pointer; padding:10px; width:100%; text-align:center; margin-top:6px;
+  }
+
+  ::-webkit-scrollbar{width:0; height:0;}
+</style>
+</head>
+<body>
+<script>if(window.__wlDarkPreload) document.body.classList.add('dark');</script>
+<div id="app">
+
+  <div class="topbar">
+    <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 7v5l3 2" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2.2"/></svg></div>
+    <div style="flex:1;">
+      <div class="title">WorkLog Lite</div>
+      <div class="subtitle">soft, simple hour tracking</div>
+    </div>
+    <button class="month-btn" id="settingsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5c.05.5.05 1 0 1.5l1.6 1.2-1.5 2.6-1.9-.7c-.4.3-.8.6-1.3.8l-.3 2h-3l-.3-2c-.5-.2-.9-.5-1.3-.8l-1.9.7-1.5-2.6 1.6-1.2c-.05-.5-.05-1 0-1.5l-1.6-1.2 1.5-2.6 1.9.7c.4-.3.8-.6 1.3-.8l.3-2h3l.3 2c.5.2.9.5 1.3.8l1.9-.7 1.5 2.6z"/></svg>
+    </button>
+  </div>
+
+  <!-- HOME -->
+  <div id="view-home" class="view">
+    <div class="clock-card">
+      <div class="greet" id="greetTxt">Good day</div>
+      <div class="time" id="liveClock">--:--</div>
+      <div class="date" id="liveDate">-</div>
+    </div>
+
+    <div id="activeBannerSlot"></div>
+
+    <div class="card">
+      <div class="section-label" style="margin-bottom:12px;">Day type</div>
+      <div class="chip-row daytype-row" id="dayTypeChips">
+        <div class="chip daytype active" data-daytype="normal">Normal</div>
+        <div class="chip daytype" data-daytype="comp">Compensatory</div>
+        <div class="chip daytype" data-daytype="weekoff">Week off</div>
+      </div>
+
+      <div id="workFieldsGroup">
+        <div class="section-label" style="margin:16px 0 12px;" id="whereLabel">Where are you</div>
+        <div class="chip-row" id="locChips">
+          <div class="chip" data-loc="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+            Home
+          </div>
+          <div class="chip" data-loc="office">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>
+            Office
+          </div>
+        </div>
+
+        <div class="section-label" style="margin:16px 0 12px;">What are you doing</div>
+        <div class="chip-row" id="actChips">
+          <div class="chip" data-act="login">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+            Login
+          </div>
+          <div class="chip" data-act="logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+            Logout
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin:16px 0 8px;">When</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="inpDate">
+        </div>
+        <div class="field" id="timeField">
+          <label>Time</label>
+          <input type="time" id="inpTime">
+        </div>
+      </div>
+      <div id="weekOffNote" class="hidden" style="font-size:12.5px; color:var(--ink-light); font-weight:700; margin-top:8px; line-height:1.5;">This date will be marked as a week off — no hours logged.</div>
+
+      <div style="height:16px;"></div>
+      <button class="btn-submit" id="submitBtn">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Save entry
+      </button>
+    </div>
+
+    <div class="card today-card" id="todayCard"></div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="view-overview" class="view hidden">
+    <div class="card" style="padding:8px 12px;">
+      <div class="month-switch">
+        <button class="month-btn" id="prevMonth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="m-title" id="monthTitle">-</div>
+        <button class="month-btn" id="nextMonth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+    <button class="add-past-btn" id="exportBtn" style="border-style:solid; border-color:var(--line); color:var(--lavender-darker);">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+      Export this month (.csv)
+    </button>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:8px;">Daily breakdown</div>
+      <div class="card" id="dailyList" style="padding: 4px 12px;"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="view-history" class="view hidden">
+    <div id="historyList" style="display:flex; flex-direction:column; gap:12px;"></div>
+    <button class="add-past-btn" id="addPastBtn">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Add a past entry
+    </button>
+  </div>
+
+  <nav class="bottomnav">
+    <button class="navbtn active" data-view="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      <span class="lbl">Home</span>
+    </button>
+    <button class="navbtn" data-view="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M12 19V5M20 19v-7"/></svg>
+      <span class="lbl">Overview</span>
+    </button>
+    <button class="navbtn" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span class="lbl">History</span>
+    </button>
+  </nav>
+
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STANDARD_MIN = 9*60;
+  var STORAGE_KEY = 'worklog-lite-data-v1';
+  var state = { events: [], dayMeta: {}, nextId: 1, settings: { trackComp: true, darkMode: false } };
+  var selectedLoc = 'home';
+  var selectedAct = 'login';
+  var selectedDayType = 'normal';
+  var openHistoryDates = {};
+  var overviewMonth = new Date();
+
+  /* ---------------- storage (local to this browser/device) ---------------- */
+  function loadState(cb){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        state.events = parsed.events || [];
+        state.dayMeta = parsed.dayMeta || {};
+        state.nextId = parsed.nextId || (state.events.length+1);
+        state.settings = Object.assign({ trackComp: true, darkMode: false }, parsed.settings || {});
+      } else {
+        state.settings.darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+    }catch(e){ console.error('load failed', e); }
+    applyTheme();
+    cb();
+  }
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      console.error('save failed', e);
+      alert("Couldn't save — your browser storage may be full or private-browsing mode is blocking it.");
+    }
+  }
+  function applyTheme(){
+    document.body.classList.toggle('dark', !!state.settings.darkMode);
+    document.documentElement.style.colorScheme = state.settings.darkMode ? 'dark' : 'light';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute('content', state.settings.darkMode ? '#282438' : '#A78BDB');
+  }
+
+  /* ---------------- utils ---------------- */
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function nowTimeStr(){ var d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+  function dt(dateStr, timeStr){ return new Date(dateStr+'T'+timeStr+':00'); }
+  function fmtTime12(timeStr){
+    var p = timeStr.split(':'); var h = parseInt(p[0],10); var m = p[1];
+    var ap = h>=12 ? 'PM' : 'AM'; var h12 = h%12; if(h12===0) h12=12;
+    return h12+':'+m+' '+ap;
+  }
+  function fmtMin(mins){
+    mins = Math.round(mins);
+    var h = Math.floor(mins/60); var m = mins%60;
+    if(h<=0 && m<=0) return '0m';
+    if(h<=0) return m+'m';
+    if(m<=0) return h+'h';
+    return h+'h '+m+'m';
+  }
+  var WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function fmtDateHead(dateStr){
+    var d = new Date(dateStr+'T00:00:00');
+    return { day: d.getDate(), wd: WD[d.getDay()], full: d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear() };
+  }
+
+  function iconHome(cls){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="'+(cls||'')+'"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>'; }
+  function iconOffice(cls){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="'+(cls||'')+'"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>'; }
+  function iconLogin(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="'+'#3F8A57'+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>'; }
+  function iconLogout(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="'+'#6F5BA8'+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>'; }
+  function iconEdit(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'; }
+  function iconTrash(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'; }
+
+  /* ---------------- session logic ---------------- */
+  function sortedEvents(){
+    return state.events.slice().sort(function(a,b){
+      var da = dt(a.date,a.time).getTime(), db = dt(b.date,b.time).getTime();
+      if(da!==db) return da-db;
+      return (a.id||0)-(b.id||0);
+    });
+  }
+
+  function buildSessions(){
+    var evs = sortedEvents();
+    var sessions = [];
+    var openLogin = null;
+    evs.forEach(function(e){
+      if(e.action==='login'){
+        if(openLogin){ sessions.push({ start: openLogin, end: null, incomplete:true }); }
+        openLogin = e;
+      } else {
+        if(openLogin){
+          sessions.push({ start: openLogin, end: e, incomplete:false });
+          openLogin = null;
+        } else {
+          sessions.push({ start:null, end:e, incomplete:true });
+        }
+      }
+    });
+    if(openLogin){ sessions.push({ start: openLogin, end:null, incomplete:true, ongoing:true }); }
+    return sessions;
+  }
+
+  function sessionMinutes(s){
+    if(s.incomplete || !s.start || !s.end) return 0;
+    var a = dt(s.start.date, s.start.time).getTime();
+    var b = dt(s.end.date, s.end.time).getTime();
+    return Math.max(0,(b-a)/60000);
+  }
+
+  function groupSessionsByDay(){
+    var sessions = buildSessions();
+    var map = {};
+    sessions.forEach(function(s){
+      var key = s.start ? s.start.date : (s.end ? s.end.date : null);
+      if(!key) return;
+      if(!map[key]) map[key] = [];
+      map[key].push(s);
+    });
+    return map;
+  }
+
+  function dayStats(dateStr, sessions){
+    var meta = state.dayMeta[dateStr] || {};
+    var total = 0;
+    (sessions||[]).forEach(function(s){ total += sessionMinutes(s); });
+    var compOn = state.settings.trackComp;
+    var isWeekOff = compOn && !!meta.weekOff;
+    var compUsed = compOn ? (meta.compUsed || 0) : 0;
+    var regular, ot, compEarned;
+    if(isWeekOff){
+      regular = 0; ot = 0; compEarned = total;
+    } else {
+      regular = Math.min(total, STANDARD_MIN);
+      ot = Math.max(0, total - STANDARD_MIN);
+      compEarned = 0;
+    }
+    var credited = regular + compUsed;
+    return { total: total, regular: regular, ot: ot, isWeekOff: isWeekOff, compUsed: compUsed, compEarned: compEarned, credited: credited };
+  }
+
+  function getOpenSession(){
+    var sessions = buildSessions();
+    for(var i=sessions.length-1;i>=0;i--){
+      if(sessions[i].ongoing) return sessions[i];
+    }
+    return null;
+  }
+
+  /* ---------------- ribbon ---------------- */
+  function ribbonHTML(sessions, stats){
+    var total = stats.total;
+    var scale = Math.max(total, STANDARD_MIN);
+    if(scale<=0) scale = STANDARD_MIN;
+    var html = '<div class="ribbon-wrap">';
+    var cum = 0;
+    (sessions||[]).forEach(function(s){
+      var m = sessionMinutes(s);
+      if(m<=0) return;
+      var left = (cum/scale)*100;
+      var width = (m/scale)*100;
+      var loc = (s.start && s.start.location) || 'home';
+      html += '<div class="ribbon-seg '+loc+'" style="left:'+left+'%; width:'+width+'%;"></div>';
+      cum += m;
+    });
+    if(stats.ot>0){
+      var thresholdPct = (STANDARD_MIN/scale)*100;
+      html += '<div class="ribbon-stripe" style="left:'+thresholdPct+'%;"></div>';
+      html += '<div class="ribbon-marker" style="left:'+thresholdPct+'%;"></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  /* ---------------- rendering: HOME ---------------- */
+  function updateClock(){
+    var d = new Date();
+    var h = d.getHours(); var ap = h>=12?'PM':'AM'; var h12=h%12; if(h12===0)h12=12;
+    document.getElementById('liveClock').textContent = h12+':'+pad(d.getMinutes())+' '+ap;
+    document.getElementById('liveDate').textContent = WD[d.getDay()]+', '+d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear();
+    var greet = h<12 ? 'Good morning' : (h<17 ? 'Good afternoon' : 'Good evening');
+    document.getElementById('greetTxt').textContent = greet;
+
+    var open = getOpenSession();
+    var slot = document.getElementById('activeBannerSlot');
+    if(open){
+      var startMs = dt(open.start.date, open.start.time).getTime();
+      var elapsedMin = Math.max(0, Math.floor((Date.now()-startMs)/60000));
+      slot.innerHTML =
+        '<div class="active-banner">'+
+          '<div class="dot"></div>'+
+          '<div class="txt">'+
+            '<div class="lbl">Currently working &middot; '+(open.start.location==='home'?'Home':'Office')+'</div>'+
+            '<div class="elapsed">'+fmtMin(elapsedMin)+' so far</div>'+
+          '</div>'+
+          '<button class="btn-mini" id="quickLogoutBtn">Log out</button>'+
+        '</div>';
+      var qb = document.getElementById('quickLogoutBtn');
+      if(qb) qb.onclick = function(){ quickLogout(open.start.location); };
+    } else {
+      slot.innerHTML = '';
+    }
+  }
+
+  function applyDayTypeUI(){
+    var isWeekOff = selectedDayType === 'weekoff';
+    document.getElementById('workFieldsGroup').classList.toggle('disabled', isWeekOff);
+    document.getElementById('timeField').classList.toggle('disabled', isWeekOff);
+    document.getElementById('weekOffNote').classList.toggle('hidden', !isWeekOff);
+    var btn = document.getElementById('submitBtn');
+    btn.lastChild.textContent = isWeekOff ? ' Mark as week off' : ' Save entry';
+  }
+
+  function refreshHomeDefaults(){
+    var open = getOpenSession();
+    selectedAct = open ? 'logout' : 'login';
+    selectedLoc = open ? open.start.location : selectedLoc;
+    document.querySelectorAll('#locChips .chip').forEach(function(c){ c.classList.toggle('active', c.dataset.loc===selectedLoc); });
+    document.querySelectorAll('#actChips .chip').forEach(function(c){ c.classList.toggle('active', c.dataset.act===selectedAct); });
+    document.getElementById('inpDate').value = todayStr();
+    document.getElementById('inpTime').value = nowTimeStr();
+    suggestDayTypeFor(todayStr());
+  }
+
+  function suggestDayTypeFor(dateStr){
+    var meta = state.dayMeta[dateStr];
+    selectedDayType = (meta && meta.weekOff) ? 'comp' : 'normal';
+    document.querySelectorAll('#dayTypeChips .chip').forEach(function(c){ c.classList.toggle('active', c.dataset.daytype===selectedDayType); });
+    applyDayTypeUI();
+  }
+
+  function renderTodayCard(){
+    var dateStr = todayStr();
+    var map = groupSessionsByDay();
+    var sessions = map[dateStr] || [];
+    var stats = dayStats(dateStr, sessions);
+    var card = document.getElementById('todayCard');
+    var html = '<div class="today-head"><span class="lbl">Today</span><span class="val">'+fmtMin(stats.total)+' worked</span></div>';
+    if(sessions.length===0){
+      html += '<div class="empty"><div class="emoji">&#127793;</div><div class="msg">No sessions yet today.<br>Tap Login above to get started.</div></div>';
+    } else {
+      html += ribbonHTML(sessions, stats);
+      html += '<div class="ribbon-legend">'+
+        '<span><span class="sw" style="background:var(--blue-deep)"></span>Home</span>'+
+        '<span><span class="sw" style="background:var(--pink-deep)"></span>Office</span>'+
+        (stats.ot>0 ? '<span><span class="sw" style="background:var(--gold-deep)"></span>Overtime</span>' : '')+
+        '</div>';
+      html += '<div style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; font-weight:800; color:var(--ink-light);">'+
+        '<span>Regular <b style="color:var(--ink)">'+fmtMin(stats.regular)+'</b></span>'+
+        (stats.ot>0 ? '<span>OT <b style="color:var(--gold-darker)">'+fmtMin(stats.ot)+'</b></span>' : '')+
+        '</div>';
+    }
+    card.innerHTML = html;
+  }
+
+  function quickLogout(loc){
+    addEvent({ date: todayStr(), time: nowTimeStr(), location: loc, action: 'logout' });
+    renderAll();
+  }
+
+  function addEvent(ev){
+    ev.id = state.nextId++;
+    state.events.push(ev);
+    saveState();
+  }
+
+  /* ---------------- OVERVIEW ---------------- */
+  function monthKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1); }
+
+  function renderOverview(){
+    document.getElementById('monthTitle').textContent = MO[overviewMonth.getMonth()]+' '+overviewMonth.getFullYear();
+    var mKey = monthKey(overviewMonth);
+    var map = groupSessionsByDay();
+    var dates = Object.keys(map).filter(function(d){ return d.slice(0,7)===mKey; }).sort();
+
+    var totalWorked=0, totalRegular=0, totalOt=0, weekOffs=0, workDays=0;
+    var compBank = 0;
+
+    Object.keys(state.dayMeta).forEach(function(d){
+      var meta = state.dayMeta[d];
+      var s = dayStats(d, map[d]||[]);
+      if(meta.weekOff) compBank += s.compEarned;
+      compBank -= (meta.compUsed||0);
+    });
+
+    var rows = dates.map(function(d){
+      var s = dayStats(d, map[d]);
+      if(s.isWeekOff) weekOffs++; else if(s.total>0) workDays++;
+      totalWorked += s.total; totalRegular += s.regular; totalOt += s.ot;
+      return { date: d, stats: s, sessions: map[d] };
+    }).sort(function(a,b){ return a.date<b.date?1:-1; });
+
+    var statGrid = document.getElementById('statGrid');
+    var cards =
+      '<div class="stat-card c1"><div class="num">'+fmtMin(totalWorked)+'</div><div class="lbl">Total worked</div></div>'+
+      '<div class="stat-card c2"><div class="num">'+fmtMin(totalRegular)+'</div><div class="lbl">Regular hours</div></div>'+
+      '<div class="stat-card c3"><div class="num">'+fmtMin(totalOt)+'</div><div class="lbl">Overtime</div></div>'+
+      '<div class="stat-card c4"><div class="num">'+workDays+'</div><div class="lbl">Work days</div></div>';
+    if(state.settings.trackComp){
+      cards +=
+        '<div class="stat-card c5"><div class="num">'+weekOffs+'</div><div class="lbl">Week offs</div></div>'+
+        '<div class="stat-card c6"><div class="num">'+fmtMin(Math.max(0,compBank))+'</div><div class="lbl">Comp bank</div></div>';
+    }
+    statGrid.innerHTML = cards;
+
+    var listEl = document.getElementById('dailyList');
+    if(rows.length===0){
+      listEl.innerHTML = '<div class="empty"><div class="emoji">&#128196;</div><div class="msg">Nothing logged this month yet.</div></div>';
+    } else {
+      listEl.innerHTML = rows.map(function(r){
+        var head = fmtDateHead(r.date);
+        var s = r.stats;
+        var badges = '';
+        if(s.isWeekOff) badges += '<span class="badge weekoff">Week off</span>';
+        if(s.ot>0) badges += '<span class="badge ot">+'+fmtMin(s.ot)+' OT</span>';
+        return '<div class="day-row" data-jump="'+r.date+'">'+
+          '<div class="dnum"><div class="d">'+head.day+'</div><div class="wd">'+head.wd+'</div></div>'+
+          '<div class="dmid"><div class="dtxt">'+(badges || (r.sessions.length+' session'+(r.sessions.length===1?'':'s')))+'</div>'+ribbonHTML(r.sessions, s)+'</div>'+
+          '<div class="dright"><div class="tot">'+fmtMin(s.total)+'</div><div class="sub">'+fmtMin(s.regular)+' reg</div></div>'+
+        '</div>';
+      }).join('');
+      listEl.querySelectorAll('.day-row').forEach(function(row){
+        row.onclick = function(){
+          var d = row.dataset.jump;
+          openHistoryDates[d] = true;
+          switchView('history');
+          setTimeout(function(){
+            var el = document.querySelector('.hist-day[data-date="'+d+'"]');
+            if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+          }, 60);
+        };
+      });
+    }
+  }
+
+  /* ---------------- HISTORY ---------------- */
+  var sessionRegistry = {}; // token -> session object, rebuilt every render
+
+  function renderHistory(){
+    var map = groupSessionsByDay();
+    var allDates = Object.keys(map).concat(Object.keys(state.dayMeta));
+    var uniq = {};
+    allDates.forEach(function(d){ uniq[d]=true; });
+    var dates = Object.keys(uniq).sort().reverse();
+
+    var el = document.getElementById('historyList');
+    if(dates.length===0){
+      el.innerHTML = '<div class="card"><div class="empty"><div class="emoji">&#9749;</div><div class="msg">No history yet.<br>Your logged sessions will show up here.</div></div></div>';
+      return;
+    }
+
+    sessionRegistry = {};
+    var tokenSeq = 0;
+
+    el.innerHTML = dates.map(function(d){
+      var sessions = (map[d]||[]).slice().sort(function(a,b){
+        var ta = a.start? dt(a.start.date,a.start.time).getTime() : (a.end?dt(a.end.date,a.end.time).getTime():0);
+        var tb = b.start? dt(b.start.date,b.start.time).getTime() : (b.end?dt(b.end.date,b.end.time).getTime():0);
+        return ta-tb;
+      });
+      var stats = dayStats(d, map[d]);
+      var head = fmtDateHead(d);
+      var isOpen = !!openHistoryDates[d];
+      var meta = state.dayMeta[d] || {};
+
+      var sessRows = sessions.map(function(s){
+        var token = 's'+(tokenSeq++);
+        sessionRegistry[token] = s;
+        var loc = (s.start && s.start.location) || (s.end && s.end.location) || 'home';
+        var locClass = 'loc-'+loc;
+        var icon = loc==='home' ? iconHome() : iconOffice();
+        var rangeText, metaText, durText = '';
+
+        if(s.start && s.end){
+          var endLabel = fmtTime12(s.end.time) + (s.end.date!==s.start.date ? ' ('+fmtDateHead(s.end.date).wd+')' : '');
+          rangeText = fmtTime12(s.start.time) + ' &rarr; ' + endLabel;
+          metaText = (loc==='home'?'Home':'Office');
+          durText = fmtMin(sessionMinutes(s));
+        } else if(s.start && !s.end){
+          rangeText = fmtTime12(s.start.time) + ' &rarr; still working';
+          metaText = (loc==='home'?'Home':'Office') + ' &middot; ongoing';
+        } else {
+          rangeText = 'No login logged &rarr; ' + fmtTime12(s.end.time);
+          metaText = (loc==='home'?'Home':'Office') + ' &middot; missing login';
+          locClass = 'irregular';
+        }
+
+        return '<div class="session-row '+locClass+'">'+
+          '<div class="sicon">'+icon+'</div>'+
+          '<div class="stxt"><div class="srange">'+rangeText+'</div>'+
+          '<div class="smeta">'+metaText+(durText?' &middot; <span class="sdur">'+durText+'</span>':'')+'</div></div>'+
+          '<button class="sedit" data-sessedit="'+token+'">'+iconEdit()+'</button>'+
+          '<button class="sdel" data-sessdel="'+token+'">'+iconTrash()+'</button>'+
+        '</div>';
+      }).join('');
+
+      return '<div class="hist-day" data-date="'+d+'">'+
+        '<div class="hist-day-head'+(isOpen?' open':'')+'" data-toggle="'+d+'">'+
+          '<div class="dnum"><div class="d">'+head.day+'</div><div class="wd">'+head.wd+'</div></div>'+
+          '<div class="dmid"><div style="font-size:12.5px; font-weight:700; color:var(--ink-light); margin-bottom:6px;">'+
+            (stats.isWeekOff ? '<span class="badge weekoff">Week off</span>' : (stats.ot>0 ? '<span class="badge ot">'+fmtMin(stats.ot)+' OT</span>' : (sessions.length? sessions.length+' session'+(sessions.length===1?'':'s') : 'No sessions')))+
+          '</div>'+ (sessions.length? ribbonHTML(sessions, stats) : '') +'</div>'+
+          '<div class="dright"><div class="tot">'+fmtMin(stats.total)+'</div></div>'+
+          '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'+
+        '</div>'+
+        '<div class="hist-day-body'+(isOpen?' open':'')+'">'+
+          (sessRows || '<div class="empty" style="padding:14px 0;"><div class="msg">No sessions logged.</div></div>')+
+          (state.settings.trackComp ?
+            ('<div class="daymeta-row">'+
+              '<div class="toggle-lbl">Week off day</div>'+
+              '<div class="switch'+(meta.weekOff?' on':'')+'" data-weekoff="'+d+'"><div class="knob"></div></div>'+
+            '</div>'+
+            '<div class="comp-input">'+
+              '<label>Comp used</label>'+
+              '<input type="number" min="0" step="0.5" data-compinput="'+d+'" value="'+(meta.compUsed||0)+'">'+
+              '<label>hrs</label>'+
+            '</div>') : '')+
+          '<button class="clear-day-btn" data-clearday="'+d+'">Clear this day</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    el.querySelectorAll('[data-toggle]').forEach(function(h){
+      h.onclick = function(){
+        var d = h.dataset.toggle;
+        openHistoryDates[d] = !openHistoryDates[d];
+        renderHistory();
+      };
+    });
+    el.querySelectorAll('[data-sessedit]').forEach(function(btn){
+      btn.onclick = function(e){
+        e.stopPropagation();
+        var s = sessionRegistry[btn.dataset.sessedit];
+        if(s) openSessionSheet(s);
+      };
+    });
+    el.querySelectorAll('[data-sessdel]').forEach(function(btn){
+      btn.onclick = function(e){
+        e.stopPropagation();
+        var s = sessionRegistry[btn.dataset.sessdel];
+        if(!s) return;
+        openConfirmSheet({
+          title: 'Delete this session?',
+          message: 'This removes its login and logout entries. This cannot be undone.',
+          confirmLabel: 'Delete',
+          danger: true,
+          onConfirm: function(){
+            var ids = [];
+            if(s.start) ids.push(s.start.id);
+            if(s.end) ids.push(s.end.id);
+            state.events = state.events.filter(function(x){ return ids.indexOf(x.id)===-1; });
+            saveState();
+            renderAll();
+          }
+        });
+      };
+    });
+    el.querySelectorAll('[data-clearday]').forEach(function(btn){
+      btn.onclick = function(e){
+        e.stopPropagation();
+        var d = btn.dataset.clearday;
+        openConfirmSheet({
+          title: 'Clear this day?',
+          message: 'Removes all entries and settings for '+fmtDateHead(d).full+'. This cannot be undone.',
+          confirmLabel: 'Clear day',
+          danger: true,
+          onConfirm: function(){
+            state.events = state.events.filter(function(x){ return x.date!==d; });
+            delete state.dayMeta[d];
+            saveState();
+            renderAll();
+          }
+        });
+      };
+    });
+    el.querySelectorAll('[data-weekoff]').forEach(function(sw){
+      sw.onclick = function(e){
+        e.stopPropagation();
+        var d = sw.dataset.weekoff;
+        if(!state.dayMeta[d]) state.dayMeta[d] = {};
+        state.dayMeta[d].weekOff = !state.dayMeta[d].weekOff;
+        saveState();
+        renderHistory();
+        renderOverview();
+      };
+    });
+    el.querySelectorAll('[data-compinput]').forEach(function(inp){
+      inp.onclick = function(e){ e.stopPropagation(); };
+      inp.onchange = function(){
+        var d = inp.dataset.compinput;
+        if(!state.dayMeta[d]) state.dayMeta[d] = {};
+        state.dayMeta[d].compUsed = parseFloat(inp.value)||0;
+        saveState();
+        renderHistory();
+        renderOverview();
+      };
+    });
+  }
+
+  /* ---------------- SESSION SHEET ---------------- */
+  function openSessionSheet(session){
+    var isNew = !session;
+    var startEv = (session && session.start) ? Object.assign({}, session.start) : null;
+    var endEv = (session && session.end) ? Object.assign({}, session.end) : null;
+
+    var loc = (startEv && startEv.location) || (endEv && endEv.location) || 'home';
+    var loginDate = startEv ? startEv.date : (endEv ? endEv.date : todayStr());
+    var loginTime = startEv ? startEv.time : nowTimeStr();
+    var logoutDate = endEv ? endEv.date : loginDate;
+    var logoutTime = endEv ? endEv.time : loginTime;
+    var stillWorking = isNew ? false : (!!startEv && !endEv);
+
+    var root = document.getElementById('modal-root');
+    root.innerHTML =
+      '<div class="sheet-overlay" id="sheetOverlay">'+
+        '<div class="sheet">'+
+          '<div class="sheet-handle"></div>'+
+          '<h3>'+(isNew?'Add a session':'Edit session')+'</h3>'+
+          '<div class="section-label" style="margin-bottom:10px;">Where</div>'+
+          '<div class="chip-row" id="mLocChips">'+
+            '<div class="chip" data-loc="home">'+iconHome()+'Home</div>'+
+            '<div class="chip" data-loc="office">'+iconOffice()+'Office</div>'+
+          '</div>'+
+          '<div class="section-label" style="margin:16px 0 8px;">Login</div>'+
+          '<div class="field-row">'+
+            '<div class="field"><label>Date</label><input type="date" id="mLoginDate"></div>'+
+            '<div class="field"><label>Time</label><input type="time" id="mLoginTime"></div>'+
+          '</div>'+
+          '<div class="daymeta-row" style="margin-top:16px;">'+
+            '<div class="toggle-lbl">Still working (no logout yet)</div>'+
+            '<div class="switch'+(stillWorking?' on':'')+'" id="stillWorkingToggle"><div class="knob"></div></div>'+
+          '</div>'+
+          '<div id="logoutFieldsGroup" style="margin-top:12px;'+(stillWorking?'display:none;':'')+'">'+
+            '<div class="section-label" style="margin-bottom:8px;">Logout</div>'+
+            '<div class="field-row">'+
+              '<div class="field"><label>Date</label><input type="date" id="mLogoutDate"></div>'+
+              '<div class="field"><label>Time</label><input type="time" id="mLogoutTime"></div>'+
+            '</div>'+
+          '</div>'+
+          '<div class="sheet-actions">'+
+            '<button class="btn-secondary" id="mCancel">Cancel</button>'+
+            '<button class="btn-submit" id="mSave" style="flex:1.4;">Save</button>'+
+          '</div>'+
+          (isNew?'':'<button class="btn-danger-text" id="mDelete">Delete session</button>')+
+        '</div>'+
+      '</div>';
+
+    function setChip(group, val, attr){
+      document.querySelectorAll('#'+group+' .chip').forEach(function(c){ c.classList.toggle('active', c.dataset[attr]===val); });
+    }
+    setChip('mLocChips', loc, 'loc');
+    document.getElementById('mLoginDate').value = loginDate;
+    document.getElementById('mLoginTime').value = loginTime;
+    document.getElementById('mLogoutDate').value = logoutDate;
+    document.getElementById('mLogoutTime').value = logoutTime;
+
+    document.querySelectorAll('#mLocChips .chip').forEach(function(c){ c.onclick=function(){ loc=c.dataset.loc; setChip('mLocChips', loc, 'loc'); }; });
+
+    document.getElementById('stillWorkingToggle').onclick = function(){
+      stillWorking = !stillWorking;
+      this.classList.toggle('on', stillWorking);
+      document.getElementById('logoutFieldsGroup').style.display = stillWorking ? 'none' : '';
+    };
+
+    document.getElementById('sheetOverlay').onclick = function(e){ if(e.target.id==='sheetOverlay') closeSheet(); };
+    document.getElementById('mCancel').onclick = closeSheet;
+
+    document.getElementById('mSave').onclick = function(){
+      var lDate = document.getElementById('mLoginDate').value || loginDate;
+      var lTime = document.getElementById('mLoginTime').value || loginTime;
+
+      if(startEv){
+        var si = state.events.findIndex(function(x){ return x.id===startEv.id; });
+        if(si>-1) state.events[si] = { id: startEv.id, date: lDate, time: lTime, location: loc, action: 'login' };
+      } else {
+        addEvent({ date: lDate, time: lTime, location: loc, action: 'login' });
+      }
+
+      if(stillWorking){
+        if(endEv){
+          state.events = state.events.filter(function(x){ return x.id!==endEv.id; });
+        }
+      } else {
+        var oDate = document.getElementById('mLogoutDate').value || logoutDate;
+        var oTime = document.getElementById('mLogoutTime').value || logoutTime;
+        if(endEv){
+          var oi = state.events.findIndex(function(x){ return x.id===endEv.id; });
+          if(oi>-1) state.events[oi] = { id: endEv.id, date: oDate, time: oTime, location: loc, action: 'logout' };
+        } else {
+          addEvent({ date: oDate, time: oTime, location: loc, action: 'logout' });
+        }
+      }
+
+      saveState();
+      closeSheet();
+      renderAll();
+    };
+
+    if(!isNew){
+      document.getElementById('mDelete').onclick = function(){
+        openConfirmSheet({
+          title: 'Delete this session?',
+          message: 'This removes its login and logout entries. This cannot be undone.',
+          confirmLabel: 'Delete',
+          danger: true,
+          onConfirm: function(){
+            var ids = [];
+            if(startEv) ids.push(startEv.id);
+            if(endEv) ids.push(endEv.id);
+            state.events = state.events.filter(function(x){ return ids.indexOf(x.id)===-1; });
+            saveState();
+            renderAll();
+          }
+        });
+      };
+    }
+  }
+  function closeSheet(){ document.getElementById('modal-root').innerHTML=''; }
+
+  /* ---------------- CONFIRM SHEET ---------------- */
+  function openConfirmSheet(opts){
+    var root = document.getElementById('modal-root');
+    root.innerHTML =
+      '<div class="sheet-overlay" id="confirmOverlay">'+
+        '<div class="sheet">'+
+          '<div class="sheet-handle"></div>'+
+          '<h3>'+opts.title+'</h3>'+
+          '<div style="font-size:14px; color:var(--ink-light); font-weight:600; line-height:1.5;">'+opts.message+'</div>'+
+          '<div class="sheet-actions">'+
+            '<button class="btn-secondary" id="confirmCancel" style="flex:1;">Cancel</button>'+
+            '<button class="btn-submit" id="confirmOk" style="flex:1;'+(opts.danger?' background:linear-gradient(135deg,#E07A7A,#C25B5B); box-shadow:0 8px 18px rgba(194,91,91,0.3);':'')+'">'+opts.confirmLabel+'</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    document.getElementById('confirmOverlay').onclick = function(e){ if(e.target.id==='confirmOverlay') closeSheet(); };
+    document.getElementById('confirmCancel').onclick = closeSheet;
+    document.getElementById('confirmOk').onclick = function(){
+      closeSheet();
+      opts.onConfirm();
+    };
+  }
+
+  /* ---------------- SETTINGS SHEET ---------------- */
+  function openSettingsSheet(){
+    var root = document.getElementById('modal-root');
+    var on = state.settings.trackComp;
+    var dark = state.settings.darkMode;
+    root.innerHTML =
+      '<div class="sheet-overlay" id="sheetOverlay">'+
+        '<div class="sheet">'+
+          '<div class="sheet-handle"></div>'+
+          '<h3>Settings</h3>'+
+          '<div class="daymeta-row" style="border-top:none; padding-top:0; margin-top:0;">'+
+            '<div class="toggle-lbl">Dark mode</div>'+
+            '<div class="switch'+(dark?' on':'')+'" id="darkToggle"><div class="knob"></div></div>'+
+          '</div>'+
+          '<div class="daymeta-row">'+
+            '<div class="toggle-lbl">Track week offs and comp time</div>'+
+            '<div class="switch'+(on?' on':'')+'" id="compToggle"><div class="knob"></div></div>'+
+          '</div>'+
+          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-top:10px; line-height:1.5;">When off, the day type field, History, and Overview hide the week-off switch, comp hours, and comp bank stat.</div>'+
+          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-top:16px; padding-top:14px; border-top:1.5px dashed var(--line); line-height:1.5;">Standard shift is fixed at 9h. All data lives only on this device, in this browser.</div>'+
+          '<div class="sheet-actions"><button class="btn-secondary" id="sClose" style="flex:1;">Done</button></div>'+
+        '</div>'+
+      '</div>';
+    document.getElementById('sheetOverlay').onclick = function(e){ if(e.target.id==='sheetOverlay') closeSheet(); };
+    document.getElementById('sClose').onclick = closeSheet;
+    document.getElementById('compToggle').onclick = function(){
+      state.settings.trackComp = !state.settings.trackComp;
+      saveState();
+      document.getElementById('compToggle').classList.toggle('on', state.settings.trackComp);
+      renderAll();
+    };
+    document.getElementById('darkToggle').onclick = function(){
+      state.settings.darkMode = !state.settings.darkMode;
+      saveState();
+      applyTheme();
+      document.getElementById('darkToggle').classList.toggle('on', state.settings.darkMode);
+    };
+  }
+
+  /* ---------------- CSV EXPORT ---------------- */
+  function csvEscape(v){
+    v = String(v==null ? '' : v);
+    if(/[",\n]/.test(v)) v = '"'+v.replace(/"/g,'""')+'"';
+    return v;
+  }
+  function exportMonthCSV(){
+    var mKey = monthKey(overviewMonth);
+    var map = groupSessionsByDay();
+    var dates = Object.keys(map).concat(Object.keys(state.dayMeta)).filter(function(d){ return d.slice(0,7)===mKey; });
+    var uniq = {}; dates.forEach(function(d){ uniq[d]=true; });
+    dates = Object.keys(uniq).sort();
+
+    var compOn = state.settings.trackComp;
+    var header = ['Date','Day','Sessions','Locations','Total Worked','Regular','Overtime'];
+    if(compOn) header = header.concat(['Week Off','Comp Earned','Comp Used','Credited']);
+    var rows = [header];
+
+    dates.forEach(function(d){
+      var sessions = map[d] || [];
+      var stats = dayStats(d, sessions);
+      var head = fmtDateHead(d);
+      var locs = {};
+      sessions.forEach(function(s){ if(s.start) locs[s.start.location]=true; });
+      var locList = Object.keys(locs).map(function(l){ return l==='home'?'Home':'Office'; }).join(' / ');
+      var row = [d, head.wd, sessions.length, locList, fmtMin(stats.total), fmtMin(stats.regular), fmtMin(stats.ot)];
+      if(compOn) row = row.concat([stats.isWeekOff?'Yes':'No', fmtMin(stats.compEarned), fmtMin(stats.compUsed), fmtMin(stats.credited)]);
+      rows.push(row);
+    });
+
+    if(dates.length===0){
+      alert('Nothing logged for '+MO[overviewMonth.getMonth()]+' '+overviewMonth.getFullYear()+' yet.');
+      return;
+    }
+
+    var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
+    var blob = new Blob(['\ufeff'+csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'WorkLog_'+MO[overviewMonth.getMonth()]+'_'+overviewMonth.getFullYear()+'.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------------- NAV / RENDER ---------------- */
+  function switchView(name){
+    ['home','overview','history'].forEach(function(v){
+      document.getElementById('view-'+v).classList.toggle('hidden', v!==name);
+    });
+    document.querySelectorAll('.navbtn').forEach(function(b){ b.classList.toggle('active', b.dataset.view===name); });
+    if(name==='home') refreshHomeDefaults(), renderTodayCard();
+    if(name==='overview') renderOverview();
+    if(name==='history') renderHistory();
+  }
+
+  function renderAll(){
+    refreshHomeDefaults();
+    renderTodayCard();
+    renderOverview();
+    renderHistory();
+    updateClock();
+  }
+
+  /* ---------------- INIT ---------------- */
+  function init(){
+    document.querySelectorAll('.navbtn').forEach(function(b){ b.onclick=function(){ switchView(b.dataset.view); }; });
+
+    document.querySelectorAll('#locChips .chip').forEach(function(c){
+      c.onclick = function(){ selectedLoc = c.dataset.loc; document.querySelectorAll('#locChips .chip').forEach(function(x){x.classList.toggle('active', x===c);}); };
+    });
+    document.querySelectorAll('#actChips .chip').forEach(function(c){
+      c.onclick = function(){ selectedAct = c.dataset.act; document.querySelectorAll('#actChips .chip').forEach(function(x){x.classList.toggle('active', x===c);}); };
+    });
+
+    document.querySelectorAll('#dayTypeChips .chip').forEach(function(c){
+      c.onclick = function(){
+        selectedDayType = c.dataset.daytype;
+        document.querySelectorAll('#dayTypeChips .chip').forEach(function(x){ x.classList.toggle('active', x===c); });
+        applyDayTypeUI();
+      };
+    });
+
+    document.getElementById('inpDate').addEventListener('change', function(){
+      suggestDayTypeFor(this.value || todayStr());
+    });
+
+    document.getElementById('submitBtn').onclick = function(){
+      var date = document.getElementById('inpDate').value || todayStr();
+
+      if(selectedDayType === 'weekoff'){
+        if(!state.dayMeta[date]) state.dayMeta[date] = {};
+        state.dayMeta[date].weekOff = true;
+        saveState();
+      } else {
+        var time = document.getElementById('inpTime').value || nowTimeStr();
+        addEvent({ date: date, time: time, location: selectedLoc, action: selectedAct });
+        if(selectedDayType === 'comp'){
+          if(!state.dayMeta[date]) state.dayMeta[date] = {};
+          state.dayMeta[date].weekOff = true;
+        }
+        // 'normal' doesn't touch the week-off flag — if this date was already
+        // marked a week off, hours logged here still count toward comp automatically.
+        saveState();
+      }
+
+      renderAll();
+      var btn = document.getElementById('submitBtn');
+      btn.style.transform='scale(0.97)';
+      setTimeout(function(){ btn.style.transform=''; }, 120);
+    };
+
+    document.getElementById('prevMonth').onclick = function(){
+      overviewMonth = new Date(overviewMonth.getFullYear(), overviewMonth.getMonth()-1, 1);
+      renderOverview();
+    };
+    document.getElementById('nextMonth').onclick = function(){
+      overviewMonth = new Date(overviewMonth.getFullYear(), overviewMonth.getMonth()+1, 1);
+      renderOverview();
+    };
+    document.getElementById('addPastBtn').onclick = function(){ openSessionSheet(null); };
+    document.getElementById('settingsBtn').onclick = openSettingsSheet;
+    document.getElementById('exportBtn').onclick = exportMonthCSV;
+
+    loadState(function(){
+      renderAll();
+      setInterval(updateClock, 1000*15);
+      updateClock();
+    });
+
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
