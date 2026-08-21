@@ -51,6 +51,15 @@
     --gold:#FBEFD9;
     --gold-deep:#EAC178;
     --gold-darker:#96731F;
+    --honey:#FCE9BC;
+    --honey-deep:#E6B94A;
+    --honey-darker:#7A5A0A;
+    --coral:#F5E2D3;
+    --coral-deep:#C4784A;
+    --coral-darker:#7A3E19;
+    --warn:#FADCE3;
+    --warn-deep:#E37C97;
+    --warn-darker:#9C2F4C;
     --stat6-bg:#F1EEFB;
     --stat6-text:#6F5BA8;
     --ink:#4A4459;
@@ -84,6 +93,15 @@
     --gold:#332A17;
     --gold-deep:#E0B565;
     --gold-darker:#F1D69C;
+    --honey:#3A2E12;
+    --honey-deep:#E0B24F;
+    --honey-darker:#F2D48F;
+    --coral:#33241A;
+    --coral-deep:#CC8A5C;
+    --coral-darker:#EBC2A0;
+    --warn:#331C24;
+    --warn-deep:#E389A2;
+    --warn-darker:#F2BBCB;
     --stat6-bg:#2E2A45;
     --stat6-text:#CBBBEF;
     --ink:#EEEAF8;
@@ -221,13 +239,12 @@
   /* ---------- RIBBON ---------- */
   .ribbon-wrap{position:relative; height:16px; border-radius:10px; background: var(--line); overflow:hidden;}
   .ribbon-seg{position:absolute; top:0; bottom:0; border-radius: 0;}
-  .ribbon-seg.home{background: var(--blue-deep);}
-  .ribbon-seg.office{background: var(--pink-deep);}
-  .ribbon-seg:first-child{border-top-left-radius:10px; border-bottom-left-radius:10px;}
-  .ribbon-stripe{position:absolute; top:0; bottom:0; right:0;
-    background: repeating-linear-gradient(45deg, var(--gold-deep) 0px, var(--gold-deep) 4px, rgba(255,255,255,0.55) 4px, rgba(255,255,255,0.55) 8px);
-    border-top-right-radius:10px; border-bottom-right-radius:10px;
-  }
+  .ribbon-seg.home{background: var(--blue-darker);}
+  .ribbon-seg.office{background: var(--pink-darker);}
+  .ribbon-stripe{position:absolute; top:0; bottom:0; background: var(--coral-darker);}
+  .ribbon-comp{position:absolute; top:0; bottom:0; background: var(--honey-darker);}
+  .rounded-left{border-top-left-radius:10px; border-bottom-left-radius:10px;}
+  .rounded-right{border-top-right-radius:10px; border-bottom-right-radius:10px;}
   .ribbon-marker{position:absolute; top:-3px; bottom:-3px; width:2px; background: var(--ink); opacity:.35;}
   .ribbon-legend{display:flex; gap:14px; margin-top:8px; flex-wrap:wrap;}
   .ribbon-legend span{font-size:11.5px; color: var(--ink-light); font-weight:700; display:flex; align-items:center; gap:5px;}
@@ -266,10 +283,10 @@
   .stat-card .lbl{font-size:12px; font-weight:800; margin-top:2px;}
   .stat-card.c1{background: var(--lavender);} .stat-card.c1 .num{color:var(--lavender-darker);} .stat-card.c1 .lbl{color:var(--lavender-darker); opacity:.8;}
   .stat-card.c2{background: var(--green);} .stat-card.c2 .num{color:var(--green-darker);} .stat-card.c2 .lbl{color:var(--green-darker); opacity:.8;}
-  .stat-card.c3{background: var(--gold);} .stat-card.c3 .num{color:var(--gold-darker);} .stat-card.c3 .lbl{color:var(--gold-darker); opacity:.8;}
+  .stat-card.c3{background: var(--coral);} .stat-card.c3 .num{color:var(--coral-darker);} .stat-card.c3 .lbl{color:var(--coral-darker); opacity:.8;}
   .stat-card.c4{background: var(--blue);} .stat-card.c4 .num{color:var(--blue-darker);} .stat-card.c4 .lbl{color:var(--blue-darker); opacity:.8;}
   .stat-card.c5{background: var(--pink);} .stat-card.c5 .num{color:var(--pink-darker);} .stat-card.c5 .lbl{color:var(--pink-darker); opacity:.8;}
-  .stat-card.c6{background: var(--stat6-bg);} .stat-card.c6 .num{color:var(--stat6-text);} .stat-card.c6 .lbl{color:var(--stat6-text); opacity:.8;}
+  .stat-card.c6{background: var(--honey);} .stat-card.c6 .num{color:var(--honey-darker);} .stat-card.c6 .lbl{color:var(--honey-darker); opacity:.8;}
 
   .day-row{
     display:flex; align-items:center; gap:12px; padding:12px 6px; border-bottom: 1px solid var(--line); cursor:pointer;
@@ -283,9 +300,10 @@
   .day-row .dright{text-align:right; flex-shrink:0;}
   .day-row .dright .tot{font-size:14.5px; font-weight:800; font-variant-numeric: tabular-nums;}
   .day-row .dright .sub{font-size:11px; color: var(--ink-light); font-weight:700;}
-  .badge{font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:8px;}
-  .badge.weekoff{background: var(--green); color: var(--green-darker);}
-  .badge.ot{background: var(--gold); color: var(--gold-darker);}
+  .badge{font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:8px; display:inline-block; margin-right:5px; margin-bottom:3px;}
+  .badge.weekoff{background: var(--green); color: var(--green-darker); border:1px solid var(--green-deep);}
+  .badge.ot{background: var(--coral); color: var(--coral-darker); border:1px solid var(--coral-deep);}
+  .badge.compused{background: var(--honey); color: var(--honey-darker); border:1px solid var(--honey-deep);}
 
   /* ---------- HISTORY ---------- */
   .hist-day{background:var(--card); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow:hidden;}
@@ -305,7 +323,7 @@
   .session-row .sicon svg{width:16px; height:16px;}
   .session-row.loc-home .sicon{background: var(--blue); color: var(--blue-darker);}
   .session-row.loc-office .sicon{background: var(--pink); color: var(--pink-darker);}
-  .session-row.irregular .sicon{background: var(--gold); color: var(--gold-darker);}
+  .session-row.irregular .sicon{background: var(--warn); color: var(--warn-darker);}
   .session-row .stxt{flex:1; min-width:0;}
   .session-row .srange{font-size:14.5px; font-weight:800; font-variant-numeric: tabular-nums;}
   .session-row .smeta{font-size:11.5px; color: var(--ink-light); font-weight:700; margin-top:1px;}
@@ -323,9 +341,10 @@
   .switch.on{background: var(--green-deep);}
   .switch .knob{position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
   .switch.on .knob{left:18px;}
-  .comp-input{display:flex; align-items:center; gap:8px; margin-top:10px;}
+  .comp-input{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap;}
   .comp-input input{width:70px; text-align:center;}
   .comp-input label{font-size:12.5px; font-weight:800; color: var(--ink-light);}
+  .comp-input .comp-preview{font-size:12px; font-weight:800; color: var(--honey-darker);}
 
   .add-past-btn{
     width:100%; border: 1.5px dashed var(--ink-faint); background:none; border-radius: var(--radius-md);
@@ -622,9 +641,9 @@
     var meta = state.dayMeta[dateStr] || {};
     var total = 0;
     (sessions||[]).forEach(function(s){ total += sessionMinutes(s); });
-    var compOn = state.settings.trackComp;
-    var isWeekOff = compOn && !!meta.weekOff;
-    var compUsed = compOn ? (meta.compUsed || 0) : 0;
+    var isWeekOff = !!meta.weekOff;
+    var compUsedHrs = meta.compUsed || 0;
+    var compUsed = compUsedHrs * 60; // meta.compUsed is stored in hours; everything below is in minutes
     var regular, ot, compEarned;
     if(isWeekOff){
       regular = 0; ot = 0; compEarned = total;
@@ -634,7 +653,7 @@
       compEarned = 0;
     }
     var credited = regular + compUsed;
-    return { total: total, regular: regular, ot: ot, isWeekOff: isWeekOff, compUsed: compUsed, compEarned: compEarned, credited: credited };
+    return { total: total, regular: regular, ot: ot, isWeekOff: isWeekOff, compUsed: compUsed, compUsedHrs: compUsedHrs, compEarned: compEarned, credited: credited };
   }
 
   function getOpenSession(){
@@ -648,24 +667,39 @@
   /* ---------------- ribbon ---------------- */
   function ribbonHTML(sessions, stats){
     var total = stats.total;
-    var scale = Math.max(total, STANDARD_MIN);
+    var compUsed = stats.compUsed || 0;
+    var scale = Math.max(total+compUsed, STANDARD_MIN);
     if(scale<=0) scale = STANDARD_MIN;
-    var html = '<div class="ribbon-wrap">';
+
+    var pieces = [];
     var cum = 0;
     (sessions||[]).forEach(function(s){
       var m = sessionMinutes(s);
       if(m<=0) return;
-      var left = (cum/scale)*100;
-      var width = (m/scale)*100;
       var loc = (s.start && s.start.location) || 'home';
-      html += '<div class="ribbon-seg '+loc+'" style="left:'+left+'%; width:'+width+'%;"></div>';
+      pieces.push({ cls:'ribbon-seg '+loc, left:(cum/scale)*100, width:(m/scale)*100 });
       cum += m;
     });
+
+    var markerHTML = '';
     if(stats.ot>0){
       var thresholdPct = (STANDARD_MIN/scale)*100;
-      html += '<div class="ribbon-stripe" style="left:'+thresholdPct+'%;"></div>';
-      html += '<div class="ribbon-marker" style="left:'+thresholdPct+'%;"></div>';
+      var otWidthPct = ((total-STANDARD_MIN)/scale)*100;
+      pieces.push({ cls:'ribbon-stripe', left:thresholdPct, width:otWidthPct });
+      markerHTML = '<div class="ribbon-marker" style="left:'+thresholdPct+'%;"></div>';
     }
+    if(compUsed>0){
+      pieces.push({ cls:'ribbon-comp', left:(total/scale)*100, width:(compUsed/scale)*100 });
+    }
+
+    var html = '<div class="ribbon-wrap">';
+    pieces.forEach(function(p, i){
+      var extra = '';
+      if(i===0) extra += ' rounded-left';
+      if(i===pieces.length-1) extra += ' rounded-right';
+      html += '<div class="'+p.cls+extra+'" style="left:'+p.left+'%; width:'+p.width+'%;"></div>';
+    });
+    html += markerHTML;
     html += '</div>';
     return html;
   }
@@ -709,6 +743,8 @@
     btn.lastChild.textContent = isWeekOff ? ' Mark as week off' : ' Save entry';
   }
 
+  var dayTypeManuallySet = false;
+
   function refreshHomeDefaults(){
     var open = getOpenSession();
     selectedAct = open ? 'logout' : 'login';
@@ -717,6 +753,7 @@
     document.querySelectorAll('#actChips .chip').forEach(function(c){ c.classList.toggle('active', c.dataset.act===selectedAct); });
     document.getElementById('inpDate').value = todayStr();
     document.getElementById('inpTime').value = nowTimeStr();
+    dayTypeManuallySet = false;
     suggestDayTypeFor(todayStr());
   }
 
@@ -739,13 +776,15 @@
     } else {
       html += ribbonHTML(sessions, stats);
       html += '<div class="ribbon-legend">'+
-        '<span><span class="sw" style="background:var(--blue-deep)"></span>Home</span>'+
-        '<span><span class="sw" style="background:var(--pink-deep)"></span>Office</span>'+
-        (stats.ot>0 ? '<span><span class="sw" style="background:var(--gold-deep)"></span>Overtime</span>' : '')+
+        '<span><span class="sw" style="background:var(--blue-darker)"></span>Home</span>'+
+        '<span><span class="sw" style="background:var(--pink-darker)"></span>Office</span>'+
+        (stats.ot>0 ? '<span><span class="sw" style="background:var(--coral-darker)"></span>Overtime</span>' : '')+
+        (stats.compUsed>0 ? '<span><span class="sw" style="background:var(--honey-darker)"></span>Comp</span>' : '')+
         '</div>';
       html += '<div style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; font-weight:800; color:var(--ink-light);">'+
         '<span>Regular <b style="color:var(--ink)">'+fmtMin(stats.regular)+'</b></span>'+
-        (stats.ot>0 ? '<span>OT <b style="color:var(--gold-darker)">'+fmtMin(stats.ot)+'</b></span>' : '')+
+        (stats.ot>0 ? '<span>OT <b style="color:var(--coral-darker)">'+fmtMin(stats.ot)+'</b></span>' : '')+
+        (stats.compUsed>0 ? '<span>Comp <b style="color:var(--honey-darker)">'+fmtMin(stats.compUsed)+'</b></span>' : '')+
         '</div>';
     }
     card.innerHTML = html;
@@ -778,7 +817,7 @@
       var meta = state.dayMeta[d];
       var s = dayStats(d, map[d]||[]);
       if(meta.weekOff) compBank += s.compEarned;
-      compBank -= (meta.compUsed||0);
+      compBank -= s.compUsed;
     });
 
     var rows = dates.map(function(d){
@@ -789,17 +828,13 @@
     }).sort(function(a,b){ return a.date<b.date?1:-1; });
 
     var statGrid = document.getElementById('statGrid');
-    var cards =
+    statGrid.innerHTML =
       '<div class="stat-card c1"><div class="num">'+fmtMin(totalWorked)+'</div><div class="lbl">Total worked</div></div>'+
       '<div class="stat-card c2"><div class="num">'+fmtMin(totalRegular)+'</div><div class="lbl">Regular hours</div></div>'+
       '<div class="stat-card c3"><div class="num">'+fmtMin(totalOt)+'</div><div class="lbl">Overtime</div></div>'+
-      '<div class="stat-card c4"><div class="num">'+workDays+'</div><div class="lbl">Work days</div></div>';
-    if(state.settings.trackComp){
-      cards +=
-        '<div class="stat-card c5"><div class="num">'+weekOffs+'</div><div class="lbl">Week offs</div></div>'+
-        '<div class="stat-card c6"><div class="num">'+fmtMin(Math.max(0,compBank))+'</div><div class="lbl">Comp bank</div></div>';
-    }
-    statGrid.innerHTML = cards;
+      '<div class="stat-card c4"><div class="num">'+workDays+'</div><div class="lbl">Work days</div></div>'+
+      '<div class="stat-card c5"><div class="num">'+weekOffs+'</div><div class="lbl">Week offs</div></div>'+
+      '<div class="stat-card c6"><div class="num">'+fmtMin(Math.max(0,compBank))+'</div><div class="lbl">Comp bank</div></div>';
 
     var listEl = document.getElementById('dailyList');
     if(rows.length===0){
@@ -809,8 +844,9 @@
         var head = fmtDateHead(r.date);
         var s = r.stats;
         var badges = '';
-        if(s.isWeekOff) badges += '<span class="badge weekoff">Week off</span>';
+        if(s.isWeekOff) badges += '<span class="badge weekoff">Week off'+(s.compEarned>0?' &middot; +'+fmtMin(s.compEarned)+' comp':'')+'</span>';
         if(s.ot>0) badges += '<span class="badge ot">+'+fmtMin(s.ot)+' OT</span>';
+        if(s.compUsed>0) badges += '<span class="badge compused">'+fmtMin(s.compUsed)+' comp used</span>';
         return '<div class="day-row" data-jump="'+r.date+'">'+
           '<div class="dnum"><div class="d">'+head.day+'</div><div class="wd">'+head.wd+'</div></div>'+
           '<div class="dmid"><div class="dtxt">'+(badges || (r.sessions.length+' session'+(r.sessions.length===1?'':'s')))+'</div>'+ribbonHTML(r.sessions, s)+'</div>'+
@@ -892,27 +928,33 @@
         '</div>';
       }).join('');
 
+      var histBadges = '';
+      if(stats.isWeekOff) histBadges += '<span class="badge weekoff">Week off'+(stats.compEarned>0?' &middot; +'+fmtMin(stats.compEarned)+' comp':'')+'</span>';
+      if(stats.ot>0) histBadges += '<span class="badge ot">'+fmtMin(stats.ot)+' OT</span>';
+      if(stats.compUsed>0) histBadges += '<span class="badge compused">'+fmtMin(stats.compUsed)+' comp used</span>';
+      if(!histBadges) histBadges = sessions.length? sessions.length+' session'+(sessions.length===1?'':'s') : 'No sessions';
+
       return '<div class="hist-day" data-date="'+d+'">'+
         '<div class="hist-day-head'+(isOpen?' open':'')+'" data-toggle="'+d+'">'+
           '<div class="dnum"><div class="d">'+head.day+'</div><div class="wd">'+head.wd+'</div></div>'+
           '<div class="dmid"><div style="font-size:12.5px; font-weight:700; color:var(--ink-light); margin-bottom:6px;">'+
-            (stats.isWeekOff ? '<span class="badge weekoff">Week off</span>' : (stats.ot>0 ? '<span class="badge ot">'+fmtMin(stats.ot)+' OT</span>' : (sessions.length? sessions.length+' session'+(sessions.length===1?'':'s') : 'No sessions')))+
+            histBadges+
           '</div>'+ (sessions.length? ribbonHTML(sessions, stats) : '') +'</div>'+
           '<div class="dright"><div class="tot">'+fmtMin(stats.total)+'</div></div>'+
           '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'+
         '</div>'+
         '<div class="hist-day-body'+(isOpen?' open':'')+'">'+
           (sessRows || '<div class="empty" style="padding:14px 0;"><div class="msg">No sessions logged.</div></div>')+
-          (state.settings.trackComp ?
-            ('<div class="daymeta-row">'+
-              '<div class="toggle-lbl">Week off day</div>'+
-              '<div class="switch'+(meta.weekOff?' on':'')+'" data-weekoff="'+d+'"><div class="knob"></div></div>'+
-            '</div>'+
-            '<div class="comp-input">'+
-              '<label>Comp used</label>'+
-              '<input type="number" min="0" step="0.5" data-compinput="'+d+'" value="'+(meta.compUsed||0)+'">'+
-              '<label>hrs</label>'+
-            '</div>') : '')+
+          '<div class="daymeta-row">'+
+            '<div class="toggle-lbl">Week off day</div>'+
+            '<div class="switch'+(meta.weekOff?' on':'')+'" data-weekoff="'+d+'"><div class="knob"></div></div>'+
+          '</div>'+
+          '<div class="comp-input">'+
+            '<label>Comp used</label>'+
+            '<input type="number" min="0" step="0.5" data-compinput="'+d+'" value="'+(meta.compUsed||0)+'">'+
+            '<label>hrs</label>'+
+            '<span class="comp-preview" data-comppreview="'+d+'">'+(meta.compUsed>0 ? '&rarr; '+fmtMin((meta.compUsed||0)*60)+' credited' : '')+'</span>'+
+          '</div>'+
           '<button class="clear-day-btn" data-clearday="'+d+'">Clear this day</button>'+
         '</div>'+
       '</div>';
@@ -984,11 +1026,17 @@
     });
     el.querySelectorAll('[data-compinput]').forEach(function(inp){
       inp.onclick = function(e){ e.stopPropagation(); };
-      inp.onchange = function(){
+      inp.oninput = function(){
         var d = inp.dataset.compinput;
+        var val = parseFloat(inp.value)||0;
         if(!state.dayMeta[d]) state.dayMeta[d] = {};
-        state.dayMeta[d].compUsed = parseFloat(inp.value)||0;
+        state.dayMeta[d].compUsed = val;
         saveState();
+        var preview = el.querySelector('[data-comppreview="'+d+'"]');
+        if(preview) preview.innerHTML = val>0 ? '&rarr; '+fmtMin(val*60)+' credited' : '';
+      };
+      inp.onchange = function(e){
+        e.stopPropagation();
         renderHistory();
         renderOverview();
       };
@@ -1141,7 +1189,6 @@
   /* ---------------- SETTINGS SHEET ---------------- */
   function openSettingsSheet(){
     var root = document.getElementById('modal-root');
-    var on = state.settings.trackComp;
     var dark = state.settings.darkMode;
     root.innerHTML =
       '<div class="sheet-overlay" id="sheetOverlay">'+
@@ -1152,11 +1199,6 @@
             '<div class="toggle-lbl">Dark mode</div>'+
             '<div class="switch'+(dark?' on':'')+'" id="darkToggle"><div class="knob"></div></div>'+
           '</div>'+
-          '<div class="daymeta-row">'+
-            '<div class="toggle-lbl">Track week offs and comp time</div>'+
-            '<div class="switch'+(on?' on':'')+'" id="compToggle"><div class="knob"></div></div>'+
-          '</div>'+
-          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-top:10px; line-height:1.5;">When off, the day type field, History, and Overview hide the week-off switch, comp hours, and comp bank stat.</div>'+
           '<div style="margin-top:18px; padding-top:16px; border-top:1.5px dashed var(--line);">'+
             '<div class="section-label" style="margin-bottom:10px;">Backup &amp; restore</div>'+
             '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:12px; line-height:1.5;">All data lives only on this device. Back it up regularly so nothing is lost if storage ever gets cleared.</div>'+
@@ -1171,12 +1213,6 @@
       '</div>';
     document.getElementById('sheetOverlay').onclick = function(e){ if(e.target.id==='sheetOverlay') closeSheet(); };
     document.getElementById('sClose').onclick = closeSheet;
-    document.getElementById('compToggle').onclick = function(){
-      state.settings.trackComp = !state.settings.trackComp;
-      saveState();
-      document.getElementById('compToggle').classList.toggle('on', state.settings.trackComp);
-      renderAll();
-    };
     document.getElementById('backupBtn').onclick = exportBackupJSON;
     document.getElementById('restoreFileInput').onchange = function(e){
       var file = e.target.files && e.target.files[0];
@@ -1207,9 +1243,7 @@
     var uniq = {}; dates.forEach(function(d){ uniq[d]=true; });
     dates = Object.keys(uniq).sort();
 
-    var compOn = state.settings.trackComp;
-    var header = ['Date','Day','Sessions','Locations','Total Worked','Regular','Overtime'];
-    if(compOn) header = header.concat(['Week Off','Comp Earned','Comp Used','Credited']);
+    var header = ['Date','Day','Sessions','Locations','Total Worked','Regular','Overtime','Week Off','Comp Earned','Comp Used','Credited'];
     var rows = [header];
 
     dates.forEach(function(d){
@@ -1219,8 +1253,7 @@
       var locs = {};
       sessions.forEach(function(s){ if(s.start) locs[s.start.location]=true; });
       var locList = Object.keys(locs).map(function(l){ return l==='home'?'Home':'Office'; }).join(' / ');
-      var row = [d, head.wd, sessions.length, locList, fmtMin(stats.total), fmtMin(stats.regular), fmtMin(stats.ot)];
-      if(compOn) row = row.concat([stats.isWeekOff?'Yes':'No', fmtMin(stats.compEarned), fmtMin(stats.compUsed), fmtMin(stats.credited)]);
+      var row = [d, head.wd, sessions.length, locList, fmtMin(stats.total), fmtMin(stats.regular), fmtMin(stats.ot), stats.isWeekOff?'Yes':'No', fmtMin(stats.compEarned), fmtMin(stats.compUsed), fmtMin(stats.credited)];
       rows.push(row);
     });
 
@@ -1353,13 +1386,14 @@
     document.querySelectorAll('#dayTypeChips .chip').forEach(function(c){
       c.onclick = function(){
         selectedDayType = c.dataset.daytype;
+        dayTypeManuallySet = true;
         document.querySelectorAll('#dayTypeChips .chip').forEach(function(x){ x.classList.toggle('active', x===c); });
         applyDayTypeUI();
       };
     });
 
     document.getElementById('inpDate').addEventListener('change', function(){
-      suggestDayTypeFor(this.value || todayStr());
+      if(!dayTypeManuallySet) suggestDayTypeFor(this.value || todayStr());
     });
 
     document.getElementById('submitBtn').onclick = function(){
