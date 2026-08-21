@@ -1,4 +1,4 @@
-var CACHE_NAME = 'worklog-lite-v1';
+var CACHE_NAME = 'worklog-lite-v2';
 var CORE_FILES = [
   './',
   './index.html',
@@ -23,16 +23,36 @@ self.addEventListener('activate', function(event){
   );
 });
 
+// Network-first for the page itself and the manifest, so updates are picked
+// up the moment you're online. Falls back to cache only when offline.
+// Cache-first for icons, which never change, to save a request.
 self.addEventListener('fetch', function(event){
   if(event.request.method !== 'GET') return;
+  var url = event.request.url;
+  var isIcon = url.indexOf('icon-192.png')>-1 || url.indexOf('icon-512.png')>-1;
+
+  if(isIcon){
+    event.respondWith(
+      caches.match(event.request).then(function(cached){
+        if(cached) return cached;
+        return fetch(event.request).then(function(resp){
+          var copy = resp.clone();
+          caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, copy); });
+          return resp;
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(function(cached){
-      if(cached) return cached;
-      return fetch(event.request).then(function(resp){
-        var copy = resp.clone();
-        caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, copy); });
-        return resp;
-      }).catch(function(){
+    fetch(event.request).then(function(resp){
+      var copy = resp.clone();
+      caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, copy); });
+      return resp;
+    }).catch(function(){
+      return caches.match(event.request).then(function(cached){
+        if(cached) return cached;
         if(event.request.mode === 'navigate'){ return caches.match('./index.html'); }
       });
     })
