@@ -40,28 +40,32 @@
     --lavender-deep:#A78BDB;
     --lavender-darker:#6F5BA8;
     --pink:#FCE4EC;
-    --pink-deep:#F3A6BE;
+    --pink-deep:#EC4899;
     --pink-darker:#B4548A;
     --blue:#E1F0FB;
-    --blue-deep:#8FC6E8;
+    --blue-deep:#0EA5E9;
     --blue-darker:#3E7FA6;
     --green:#E3F4E8;
-    --green-deep:#8FCF9F;
+    --green-deep:#22C55E;
     --green-darker:#3F8A57;
     --gold:#FBEFD9;
     --gold-deep:#EAC178;
     --gold-darker:#96731F;
     --honey:#FCE9BC;
-    --honey-deep:#E6B94A;
+    --honey-deep:#EAB308;
     --honey-darker:#7A5A0A;
     --coral:#F5E2D3;
-    --coral-deep:#C4784A;
+    --coral-deep:#F97316;
     --coral-darker:#7A3E19;
     --warn:#FADCE3;
     --warn-deep:#E37C97;
     --warn-darker:#9C2F4C;
     --stat6-bg:#F1EEFB;
     --stat6-text:#6F5BA8;
+    --ribbon-home:#9B6FE0;
+    --ribbon-office:#6A2FC4;
+    --ribbon-ot:#7F4AD1;
+    --ribbon-comp:#8F5FDB;
     --ink:#4A4459;
     --ink-light:#8A8299;
     --ink-faint:#C4BDD3;
@@ -82,28 +86,32 @@
     --lavender-deep:#A78BDB;
     --lavender-darker:#CBBBEF;
     --pink:#3B2A38;
-    --pink-deep:#E797B2;
+    --pink-deep:#F472B6;
     --pink-darker:#F3C2D5;
     --blue:#212B3B;
-    --blue-deep:#84BEE3;
+    --blue-deep:#38BDF8;
     --blue-darker:#BFE0F5;
     --green:#1F3227;
-    --green-deep:#82C594;
+    --green-deep:#4ADE80;
     --green-darker:#B9E5C4;
     --gold:#332A17;
     --gold-deep:#E0B565;
     --gold-darker:#F1D69C;
     --honey:#3A2E12;
-    --honey-deep:#E0B24F;
+    --honey-deep:#FBBF24;
     --honey-darker:#F2D48F;
     --coral:#33241A;
-    --coral-deep:#CC8A5C;
+    --coral-deep:#FB923C;
     --coral-darker:#EBC2A0;
     --warn:#331C24;
     --warn-deep:#E389A2;
     --warn-darker:#F2BBCB;
     --stat6-bg:#2E2A45;
     --stat6-text:#CBBBEF;
+    --ribbon-home:#DCBCFF;
+    --ribbon-office:#B470FF;
+    --ribbon-ot:#C189FF;
+    --ribbon-comp:#CEA2FF;
     --ink:#EEEAF8;
     --ink-light:#AFA6C7;
     --ink-faint:#655D7C;
@@ -237,12 +245,12 @@
   .today-card .today-head .val{font-size:14px; font-weight:800; color: var(--lavender-darker); font-variant-numeric: tabular-nums;}
 
   /* ---------- RIBBON ---------- */
-  .ribbon-wrap{position:relative; height:16px; border-radius:10px; background: var(--line); overflow:hidden;}
+  .ribbon-wrap{position:relative; height:16px; border-radius:10px; background: var(--bg); overflow:hidden;}
   .ribbon-seg{position:absolute; top:0; bottom:0; border-radius: 0;}
-  .ribbon-seg.home{background: var(--blue-darker);}
-  .ribbon-seg.office{background: var(--pink-darker);}
-  .ribbon-stripe{position:absolute; top:0; bottom:0; background: var(--coral-darker);}
-  .ribbon-comp{position:absolute; top:0; bottom:0; background: var(--honey-darker);}
+  .ribbon-seg.home{background: var(--ribbon-home);}
+  .ribbon-seg.office{background: var(--ribbon-office);}
+  .ribbon-stripe{position:absolute; top:0; bottom:0; background: var(--ribbon-ot);}
+  .ribbon-comp{position:absolute; top:0; bottom:0; background: var(--ribbon-comp);}
   .rounded-left{border-top-left-radius:10px; border-bottom-left-radius:10px;}
   .rounded-right{border-top-right-radius:10px; border-bottom-right-radius:10px;}
   .ribbon-marker{position:absolute; top:-3px; bottom:-3px; width:2px; background: var(--ink); opacity:.35;}
@@ -776,10 +784,10 @@
     } else {
       html += ribbonHTML(sessions, stats);
       html += '<div class="ribbon-legend">'+
-        '<span><span class="sw" style="background:var(--blue-darker)"></span>Home</span>'+
-        '<span><span class="sw" style="background:var(--pink-darker)"></span>Office</span>'+
-        (stats.ot>0 ? '<span><span class="sw" style="background:var(--coral-darker)"></span>Overtime</span>' : '')+
-        (stats.compUsed>0 ? '<span><span class="sw" style="background:var(--honey-darker)"></span>Comp</span>' : '')+
+        '<span><span class="sw" style="background:var(--ribbon-home)"></span>Home</span>'+
+        '<span><span class="sw" style="background:var(--ribbon-office)"></span>Office</span>'+
+        (stats.ot>0 ? '<span><span class="sw" style="background:var(--ribbon-ot)"></span>Overtime</span>' : '')+
+        (stats.compUsed>0 ? '<span><span class="sw" style="background:var(--ribbon-comp)"></span>Comp</span>' : '')+
         '</div>';
       html += '<div style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; font-weight:800; color:var(--ink-light);">'+
         '<span>Regular <b style="color:var(--ink)">'+fmtMin(stats.regular)+'</b></span>'+
