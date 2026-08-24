@@ -3,82 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#A78BDB">
+<meta name="theme-color" content="#282438">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="WorkLog">
+<meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>WorkLog Lite</title>
-<script>
-(function(){
-  try{
-    var raw = localStorage.getItem('worklog-lite-data-v1');
-    var dark = false;
-    if(raw){
-      var parsed = JSON.parse(raw);
-      dark = !!(parsed.settings && parsed.settings.darkMode);
-    } else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-      dark = true;
-    }
-    if(dark) document.documentElement.style.colorScheme = 'dark';
-    window.__wlDarkPreload = dark;
-  }catch(e){}
-})();
-</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23C9B8ED'/%3E%3Ccircle cx='50' cy='50' r='28' fill='%23FBFAFF'/%3E%3Cpath d='M50 34v16l12 8' stroke='%23A78BDB' stroke-width='6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FBFAFF;
-    --card:#FFFFFF;
-    --field-bg:#FCFBFF;
-    --lavender:#EAE2F8;
-    --lavender-deep:#A78BDB;
-    --lavender-darker:#6F5BA8;
-    --pink:#FCE4EC;
-    --pink-deep:#EC4899;
-    --pink-darker:#B4548A;
-    --blue:#E1F0FB;
-    --blue-deep:#0EA5E9;
-    --blue-darker:#3E7FA6;
-    --green:#E3F4E8;
-    --green-deep:#22C55E;
-    --green-darker:#3F8A57;
-    --gold:#FBEFD9;
-    --gold-deep:#EAC178;
-    --gold-darker:#96731F;
-    --honey:#FCE9BC;
-    --honey-deep:#EAB308;
-    --honey-darker:#7A5A0A;
-    --coral:#F5E2D3;
-    --coral-deep:#F97316;
-    --coral-darker:#7A3E19;
-    --warn:#FADCE3;
-    --warn-deep:#E37C97;
-    --warn-darker:#9C2F4C;
-    --stat6-bg:#F1EEFB;
-    --stat6-text:#6F5BA8;
-    --ribbon-home:#9B6FE0;
-    --ribbon-office:#6A2FC4;
-    --ribbon-ot:#7F4AD1;
-    --ribbon-comp:#8F5FDB;
-    --ink:#4A4459;
-    --ink-light:#8A8299;
-    --ink-faint:#C4BDD3;
-    --line: #ECE7F7;
-    --overlay: rgba(74,68,89,0.35);
-    --radius-lg:26px;
-    --radius-md:18px;
-    --radius-sm:12px;
-    --shadow: 0 6px 20px rgba(140, 120, 180, 0.12);
-    --shadow-sm: 0 3px 10px rgba(140, 120, 180, 0.10);
-    --body-gradient: linear-gradient(180deg, #F4EEFC 0%, #FBFAFF 220px, #FBFAFF 100%);
-  }
-  body.dark{
     --bg:#1E1B2E;
     --card:#282438;
     --field-bg:#231F33;
@@ -108,15 +47,18 @@
     --warn-darker:#F2BBCB;
     --stat6-bg:#2E2A45;
     --stat6-text:#CBBBEF;
-    --ribbon-home:#DCBCFF;
-    --ribbon-office:#B470FF;
-    --ribbon-ot:#C189FF;
-    --ribbon-comp:#CEA2FF;
+    --ribbon-home:#AB5FFF;
+    --ribbon-office:#8310FF;
+    --ribbon-ot:#8D24FF;
+    --ribbon-comp:#9738FF;
     --ink:#EEEAF8;
     --ink-light:#AFA6C7;
     --ink-faint:#655D7C;
     --line: #383152;
     --overlay: rgba(10,8,18,0.55);
+    --radius-lg:26px;
+    --radius-md:18px;
+    --radius-sm:12px;
     --shadow: 0 6px 20px rgba(0,0,0,0.35);
     --shadow-sm: 0 3px 10px rgba(0,0,0,0.28);
     --body-gradient: linear-gradient(180deg, #241F38 0%, #1E1B2E 220px, #1E1B2E 100%);
@@ -130,7 +72,6 @@
     min-height:100vh;
     display:flex;
     justify-content:center;
-    transition: background .2s ease, color .2s ease;
   }
   h1,h2,h3,.display{font-family:'Quicksand', sans-serif; font-weight:700;}
   #app{
@@ -245,15 +186,14 @@
   .today-card .today-head .val{font-size:14px; font-weight:800; color: var(--lavender-darker); font-variant-numeric: tabular-nums;}
 
   /* ---------- RIBBON ---------- */
-  .ribbon-wrap{position:relative; height:16px; border-radius:10px; background: var(--bg); overflow:hidden;}
+  .ribbon-wrap{position:relative; height:16px; border-radius:10px; background: var(--bg); margin: 4px 0; overflow:hidden;}
   .ribbon-seg{position:absolute; top:0; bottom:0; border-radius: 0;}
+  .ribbon-tip{cursor:pointer;}
   .ribbon-seg.home{background: var(--ribbon-home);}
   .ribbon-seg.office{background: var(--ribbon-office);}
   .ribbon-stripe{position:absolute; top:0; bottom:0; background: var(--ribbon-ot);}
   .ribbon-comp{position:absolute; top:0; bottom:0; background: var(--ribbon-comp);}
-  .rounded-left{border-top-left-radius:10px; border-bottom-left-radius:10px;}
-  .rounded-right{border-top-right-radius:10px; border-bottom-right-radius:10px;}
-  .ribbon-marker{position:absolute; top:-3px; bottom:-3px; width:2px; background: var(--ink); opacity:.35;}
+  .ribbon-marker{position:absolute; top:0; bottom:0; width:2px; background: var(--ink); opacity:.35;}
   .ribbon-legend{display:flex; gap:14px; margin-top:8px; flex-wrap:wrap;}
   .ribbon-legend span{font-size:11.5px; color: var(--ink-light); font-weight:700; display:flex; align-items:center; gap:5px;}
   .ribbon-legend .sw{width:9px; height:9px; border-radius:3px; display:inline-block;}
@@ -287,6 +227,9 @@
 
   .stat-grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
   .stat-card{border-radius: var(--radius-md); padding:15px 16px; box-shadow: var(--shadow-sm);}
+  .stat-card.tappable{cursor:pointer;}
+  .stat-card.tappable:active{transform: scale(0.97);}
+  .stat-card .tap-hint{font-size:10.5px; font-weight:800; opacity:.65; margin-top:4px;}
   .stat-card .num{font-size:23px; font-weight:700; font-family:'Quicksand'; font-variant-numeric: tabular-nums;}
   .stat-card .lbl{font-size:12px; font-weight:800; margin-top:2px;}
   .stat-card.c1{background: var(--lavender);} .stat-card.c1 .num{color:var(--lavender-darker);} .stat-card.c1 .lbl{color:var(--lavender-darker); opacity:.8;}
@@ -387,7 +330,6 @@
 </style>
 </head>
 <body>
-<script>if(window.__wlDarkPreload) document.body.classList.add('dark');</script>
 <div id="app">
 
   <div class="topbar">
@@ -525,7 +467,7 @@
 
   var STANDARD_MIN = 9*60;
   var STORAGE_KEY = 'worklog-lite-data-v1';
-  var state = { events: [], dayMeta: {}, nextId: 1, settings: { trackComp: true, darkMode: false } };
+  var state = { events: [], dayMeta: {}, nextId: 1, settings: { trackComp: true } };
   var selectedLoc = 'home';
   var selectedAct = 'login';
   var selectedDayType = 'normal';
@@ -541,12 +483,9 @@
         state.events = parsed.events || [];
         state.dayMeta = parsed.dayMeta || {};
         state.nextId = parsed.nextId || (state.events.length+1);
-        state.settings = Object.assign({ trackComp: true, darkMode: false }, parsed.settings || {});
-      } else {
-        state.settings.darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        state.settings = Object.assign({ trackComp: true }, parsed.settings || {});
       }
     }catch(e){ console.error('load failed', e); }
-    applyTheme();
     cb();
   }
   function saveState(){
@@ -556,12 +495,6 @@
       console.error('save failed', e);
       showToast("Couldn't save — storage may be full or blocked.");
     }
-  }
-  function applyTheme(){
-    document.body.classList.toggle('dark', !!state.settings.darkMode);
-    document.documentElement.style.colorScheme = state.settings.darkMode ? 'dark' : 'light';
-    var meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute('content', state.settings.darkMode ? '#282438' : '#A78BDB');
   }
 
   /* ---------------- utils ---------------- */
@@ -652,16 +585,51 @@
     var isWeekOff = !!meta.weekOff;
     var compUsedHrs = meta.compUsed || 0;
     var compUsed = compUsedHrs * 60; // meta.compUsed is stored in hours; everything below is in minutes
-    var regular, ot, compEarned;
+    var otToCompHrs = meta.otToComp || 0;
+    var regular, rawOt, ot, compEarned;
     if(isWeekOff){
-      regular = 0; ot = 0; compEarned = total;
+      regular = 0; rawOt = 0; ot = 0; compEarned = total;
     } else {
       regular = Math.min(total, STANDARD_MIN);
-      ot = Math.max(0, total - STANDARD_MIN);
-      compEarned = 0;
+      rawOt = Math.max(0, total - STANDARD_MIN);
+      var otToCompMin = Math.min(otToCompHrs * 60, rawOt);
+      ot = rawOt - otToCompMin;
+      compEarned = otToCompMin;
     }
     var credited = regular + compUsed;
-    return { total: total, regular: regular, ot: ot, isWeekOff: isWeekOff, compUsed: compUsed, compUsedHrs: compUsedHrs, compEarned: compEarned, credited: credited };
+    return { total: total, regular: regular, ot: ot, rawOt: rawOt, isWeekOff: isWeekOff, compUsed: compUsed, compUsedHrs: compUsedHrs, otToCompHrs: otToCompHrs, compEarned: compEarned, credited: credited };
+  }
+
+  // Days with OT still available to convert (not week-off, has unconverted ot minutes), oldest first.
+  function availableOtByDay(){
+    var map = groupSessionsByDay();
+    var days = Object.keys(map);
+    var list = [];
+    days.forEach(function(d){
+      var s = dayStats(d, map[d]);
+      if(!s.isWeekOff && s.ot>0) list.push({ date: d, minutes: s.ot });
+    });
+    list.sort(function(a,b){ return a.date<b.date?-1:1; });
+    return list;
+  }
+
+  function totalAvailableOtMinutes(){
+    return availableOtByDay().reduce(function(sum,x){ return sum+x.minutes; }, 0);
+  }
+
+  // Distributes `minutesToConvert` across days with available OT, oldest first.
+  function convertOtToComp(minutesToConvert){
+    var list = availableOtByDay();
+    var remaining = minutesToConvert;
+    for(var i=0;i<list.length && remaining>0;i++){
+      var take = Math.min(list[i].minutes, remaining);
+      var d = list[i].date;
+      if(!state.dayMeta[d]) state.dayMeta[d] = {};
+      var currentHrs = state.dayMeta[d].otToComp || 0;
+      state.dayMeta[d].otToComp = currentHrs + (take/60);
+      remaining -= take;
+    }
+    saveState();
   }
 
   function getOpenSession(){
@@ -675,6 +643,7 @@
   /* ---------------- ribbon ---------------- */
   function ribbonHTML(sessions, stats){
     var total = stats.total;
+    var otToCompMin = stats.isWeekOff ? 0 : (stats.compEarned || 0);
     var compUsed = stats.compUsed || 0;
     var scale = Math.max(total+compUsed, STANDARD_MIN);
     if(scale<=0) scale = STANDARD_MIN;
@@ -685,27 +654,34 @@
       var m = sessionMinutes(s);
       if(m<=0) return;
       var loc = (s.start && s.start.location) || 'home';
-      pieces.push({ cls:'ribbon-seg '+loc, left:(cum/scale)*100, width:(m/scale)*100 });
+      var label = (loc==='home'?'Home':'Office')+' \u00B7 '+fmtMin(m);
+      pieces.push({ cls:'ribbon-seg '+loc, left:(cum/scale)*100, width:(m/scale)*100, label: label });
       cum += m;
     });
 
     var markerHTML = '';
-    if(stats.ot>0){
+    if(stats.ot>0 || otToCompMin>0){
       var thresholdPct = (STANDARD_MIN/scale)*100;
-      var otWidthPct = ((total-STANDARD_MIN)/scale)*100;
-      pieces.push({ cls:'ribbon-stripe', left:thresholdPct, width:otWidthPct });
       markerHTML = '<div class="ribbon-marker" style="left:'+thresholdPct+'%;"></div>';
+      var otCursor = thresholdPct;
+      if(stats.ot>0){
+        var otW = (stats.ot/scale)*100;
+        pieces.push({ cls:'ribbon-stripe', left:otCursor, width:otW, label: 'Overtime \u00B7 '+fmtMin(stats.ot) });
+        otCursor += otW;
+      }
+      if(otToCompMin>0){
+        var ocW = (otToCompMin/scale)*100;
+        pieces.push({ cls:'ribbon-comp', left:otCursor, width:ocW, label: 'OT converted to comp \u00B7 '+fmtMin(otToCompMin) });
+        otCursor += ocW;
+      }
     }
     if(compUsed>0){
-      pieces.push({ cls:'ribbon-comp', left:(total/scale)*100, width:(compUsed/scale)*100 });
+      pieces.push({ cls:'ribbon-comp', left:(total/scale)*100, width:(compUsed/scale)*100, label: 'Comp used \u00B7 '+fmtMin(compUsed) });
     }
 
     var html = '<div class="ribbon-wrap">';
-    pieces.forEach(function(p, i){
-      var extra = '';
-      if(i===0) extra += ' rounded-left';
-      if(i===pieces.length-1) extra += ' rounded-right';
-      html += '<div class="'+p.cls+extra+'" style="left:'+p.left+'%; width:'+p.width+'%;"></div>';
+    pieces.forEach(function(p){
+      html += '<div class="'+p.cls+' ribbon-tip" title="'+p.label+'" data-tip="'+p.label+'" style="left:'+p.left+'%; width:'+p.width+'%;"></div>';
     });
     html += markerHTML;
     html += '</div>';
@@ -822,9 +798,8 @@
     var compBank = 0;
 
     Object.keys(state.dayMeta).forEach(function(d){
-      var meta = state.dayMeta[d];
       var s = dayStats(d, map[d]||[]);
-      if(meta.weekOff) compBank += s.compEarned;
+      compBank += s.compEarned;
       compBank -= s.compUsed;
     });
 
@@ -842,7 +817,8 @@
       '<div class="stat-card c3"><div class="num">'+fmtMin(totalOt)+'</div><div class="lbl">Overtime</div></div>'+
       '<div class="stat-card c4"><div class="num">'+workDays+'</div><div class="lbl">Work days</div></div>'+
       '<div class="stat-card c5"><div class="num">'+weekOffs+'</div><div class="lbl">Week offs</div></div>'+
-      '<div class="stat-card c6"><div class="num">'+fmtMin(Math.max(0,compBank))+'</div><div class="lbl">Comp bank</div></div>';
+      '<div class="stat-card c6 tappable" id="compBankCard"><div class="num">'+fmtMin(Math.max(0,compBank))+'</div><div class="lbl">Comp bank</div><div class="tap-hint">Convert OT &rarr;</div></div>';
+    document.getElementById('compBankCard').onclick = openConvertOtSheet;
 
     var listEl = document.getElementById('dailyList');
     if(rows.length===0){
@@ -854,6 +830,7 @@
         var badges = '';
         if(s.isWeekOff) badges += '<span class="badge weekoff">Week off'+(s.compEarned>0?' &middot; +'+fmtMin(s.compEarned)+' comp':'')+'</span>';
         if(s.ot>0) badges += '<span class="badge ot">+'+fmtMin(s.ot)+' OT</span>';
+        if(!s.isWeekOff && s.compEarned>0) badges += '<span class="badge compused">+'+fmtMin(s.compEarned)+' comp</span>';
         if(s.compUsed>0) badges += '<span class="badge compused">'+fmtMin(s.compUsed)+' comp used</span>';
         return '<div class="day-row" data-jump="'+r.date+'">'+
           '<div class="dnum"><div class="d">'+head.day+'</div><div class="wd">'+head.wd+'</div></div>'+
@@ -939,6 +916,7 @@
       var histBadges = '';
       if(stats.isWeekOff) histBadges += '<span class="badge weekoff">Week off'+(stats.compEarned>0?' &middot; +'+fmtMin(stats.compEarned)+' comp':'')+'</span>';
       if(stats.ot>0) histBadges += '<span class="badge ot">'+fmtMin(stats.ot)+' OT</span>';
+      if(!stats.isWeekOff && stats.compEarned>0) histBadges += '<span class="badge compused">+'+fmtMin(stats.compEarned)+' comp</span>';
       if(stats.compUsed>0) histBadges += '<span class="badge compused">'+fmtMin(stats.compUsed)+' comp used</span>';
       if(!histBadges) histBadges = sessions.length? sessions.length+' session'+(sessions.length===1?'':'s') : 'No sessions';
 
@@ -963,6 +941,13 @@
             '<label>hrs</label>'+
             '<span class="comp-preview" data-comppreview="'+d+'">'+(meta.compUsed>0 ? '&rarr; '+fmtMin((meta.compUsed||0)*60)+' credited' : '')+'</span>'+
           '</div>'+
+          (!stats.isWeekOff && stats.rawOt>0 ?
+            ('<div class="comp-input">'+
+              '<label>OT to comp</label>'+
+              '<input type="number" min="0" step="0.5" max="'+(stats.rawOt/60)+'" data-otcompinput="'+d+'" value="'+(meta.otToComp||0)+'">'+
+              '<label>hrs</label>'+
+              '<span class="comp-preview" data-otcomppreview="'+d+'">'+(stats.compEarned>0 ? '&rarr; '+fmtMin(stats.compEarned)+' to comp bank' : '')+'</span>'+
+            '</div>') : '')+
           '<button class="clear-day-btn" data-clearday="'+d+'">Clear this day</button>'+
         '</div>'+
       '</div>';
@@ -1042,6 +1027,24 @@
         saveState();
         var preview = el.querySelector('[data-comppreview="'+d+'"]');
         if(preview) preview.innerHTML = val>0 ? '&rarr; '+fmtMin(val*60)+' credited' : '';
+      };
+      inp.onchange = function(e){
+        e.stopPropagation();
+        renderHistory();
+        renderOverview();
+      };
+    });
+    el.querySelectorAll('[data-otcompinput]').forEach(function(inp){
+      inp.onclick = function(e){ e.stopPropagation(); };
+      inp.oninput = function(){
+        var d = inp.dataset.otcompinput;
+        var val = parseFloat(inp.value)||0;
+        if(!state.dayMeta[d]) state.dayMeta[d] = {};
+        state.dayMeta[d].otToComp = val;
+        saveState();
+        var s = dayStats(d, (groupSessionsByDay()[d]||[]));
+        var preview = el.querySelector('[data-otcomppreview="'+d+'"]');
+        if(preview) preview.innerHTML = s.compEarned>0 ? '&rarr; '+fmtMin(s.compEarned)+' to comp bank' : '';
       };
       inp.onchange = function(e){
         e.stopPropagation();
@@ -1194,28 +1197,62 @@
     };
   }
 
+  /* ---------------- CONVERT OT TO COMP SHEET ---------------- */
+  function openConvertOtSheet(){
+    var availMin = totalAvailableOtMinutes();
+    var root = document.getElementById('modal-root');
+    root.innerHTML =
+      '<div class="sheet-overlay" id="sheetOverlay">'+
+        '<div class="sheet">'+
+          '<div class="sheet-handle"></div>'+
+          '<h3>Convert OT to comp</h3>'+
+          '<div style="font-size:13.5px; color:var(--ink-light); font-weight:700; line-height:1.5; margin-bottom:14px;">'+
+            'Available to convert: <b style="color:var(--ink)">'+fmtMin(availMin)+'</b>'+
+            '<br>Pulled from your oldest unconverted overtime first.'+
+          '</div>'+
+          (availMin<=0 ?
+            '<div class="empty" style="padding:10px 0 4px;"><div class="msg">No unconverted overtime right now.</div></div>' :
+            ('<div class="field"><label>Hours to convert</label>'+
+              '<input type="number" min="0" step="0.5" max="'+(availMin/60)+'" id="otConvertInput" value="'+Math.min(1,(availMin/60))+'">'+
+            '</div>')
+          )+
+          '<div class="sheet-actions">'+
+            '<button class="btn-secondary" id="mCancel" style="flex:1;">'+(availMin<=0?'Close':'Cancel')+'</button>'+
+            (availMin>0 ? '<button class="btn-submit" id="mConvert" style="flex:1.4;">Convert</button>' : '')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    document.getElementById('sheetOverlay').onclick = function(e){ if(e.target.id==='sheetOverlay') closeSheet(); };
+    document.getElementById('mCancel').onclick = closeSheet;
+    if(availMin>0){
+      document.getElementById('mConvert').onclick = function(){
+        var inp = document.getElementById('otConvertInput');
+        var hrs = parseFloat(inp.value)||0;
+        hrs = Math.max(0, Math.min(hrs, availMin/60));
+        if(hrs<=0){ closeSheet(); return; }
+        convertOtToComp(hrs*60);
+        closeSheet();
+        renderAll();
+        showToast(fmtMin(hrs*60)+' converted to comp.');
+      };
+    }
+  }
+
   /* ---------------- SETTINGS SHEET ---------------- */
   function openSettingsSheet(){
     var root = document.getElementById('modal-root');
-    var dark = state.settings.darkMode;
     root.innerHTML =
       '<div class="sheet-overlay" id="sheetOverlay">'+
         '<div class="sheet">'+
           '<div class="sheet-handle"></div>'+
           '<h3>Settings</h3>'+
-          '<div class="daymeta-row" style="border-top:none; padding-top:0; margin-top:0;">'+
-            '<div class="toggle-lbl">Dark mode</div>'+
-            '<div class="switch'+(dark?' on':'')+'" id="darkToggle"><div class="knob"></div></div>'+
+          '<div class="section-label" style="margin-bottom:10px;">Backup &amp; restore</div>'+
+          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:12px; line-height:1.5;">All data lives only on this device. Back it up regularly so nothing is lost if storage ever gets cleared.</div>'+
+          '<div class="sheet-actions" style="margin-top:0;">'+
+            '<button class="btn-secondary" id="backupBtn" style="flex:1;">Backup (.json)</button>'+
+            '<button class="btn-secondary" id="restoreBtn" style="flex:1;">Restore</button>'+
           '</div>'+
-          '<div style="margin-top:18px; padding-top:16px; border-top:1.5px dashed var(--line);">'+
-            '<div class="section-label" style="margin-bottom:10px;">Backup &amp; restore</div>'+
-            '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:12px; line-height:1.5;">All data lives only on this device. Back it up regularly so nothing is lost if storage ever gets cleared.</div>'+
-            '<div class="sheet-actions" style="margin-top:0;">'+
-              '<button class="btn-secondary" id="backupBtn" style="flex:1;">Backup (.json)</button>'+
-              '<button class="btn-secondary" id="restoreBtn" style="flex:1;">Restore</button>'+
-            '</div>'+
-            '<input type="file" id="restoreFileInput" accept="application/json,.json" class="hidden">'+
-          '</div>'+
+          '<input type="file" id="restoreFileInput" accept="application/json,.json" class="hidden">'+
           '<div class="sheet-actions"><button class="btn-secondary" id="sClose" style="flex:1;">Done</button></div>'+
         '</div>'+
       '</div>';
@@ -1228,13 +1265,6 @@
     };
     document.getElementById('restoreBtn').onclick = function(){
       document.getElementById('restoreFileInput').click();
-    };
-    document.getElementById('darkToggle').onclick = function(){
-
-      state.settings.darkMode = !state.settings.darkMode;
-      saveState();
-      applyTheme();
-      document.getElementById('darkToggle').classList.toggle('on', state.settings.darkMode);
     };
   }
 
@@ -1350,9 +1380,8 @@
           state.events = parsed.events || [];
           state.dayMeta = parsed.dayMeta || {};
           state.nextId = parsed.nextId || (state.events.length+1);
-          state.settings = Object.assign({ trackComp: true, darkMode: false }, parsed.settings || {});
+          state.settings = Object.assign({ trackComp: true }, parsed.settings || {});
           saveState();
-          applyTheme();
           renderAll();
           showToast('Backup restored.');
         }
@@ -1383,6 +1412,16 @@
   /* ---------------- INIT ---------------- */
   function init(){
     document.querySelectorAll('.navbtn').forEach(function(b){ b.onclick=function(){ switchView(b.dataset.view); }; });
+
+    // Ribbons are re-rendered often, so use one delegated listener instead of
+    // rebinding per-segment. Handles tap-to-reveal on phones (no hover there).
+    document.getElementById('app').addEventListener('click', function(e){
+      var seg = e.target.closest ? e.target.closest('.ribbon-tip') : null;
+      if(seg && seg.dataset.tip){
+        e.stopPropagation();
+        showToast(seg.dataset.tip);
+      }
+    }, true);
 
     document.querySelectorAll('#locChips .chip').forEach(function(c){
       c.onclick = function(){ selectedLoc = c.dataset.loc; document.querySelectorAll('#locChips .chip').forEach(function(x){x.classList.toggle('active', x===c);}); };
