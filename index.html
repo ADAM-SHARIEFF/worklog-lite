@@ -167,11 +167,11 @@
   .field-row{display:flex; gap:10px;}
   .field{flex:1; display:flex; flex-direction:column; gap:5px;}
   .field label{font-size:12px; font-weight:800; color: var(--ink-light); padding-left:2px;}
-  input[type="date"], input[type="time"], input[type="number"]{
+  input[type="date"], input[type="time"], input[type="number"], input[type="text"]{
     border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 12px; font-size:15px;
     font-family:'Nunito'; font-weight:700; color: var(--ink); background:var(--field-bg); width:100%;
   }
-  input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus{outline: none; border-color: var(--lavender-deep);}
+  input[type="date"]:focus, input[type="time"]:focus, input[type="number"]:focus, input[type="text"]:focus{outline: none; border-color: var(--lavender-deep);}
 
   .btn-submit{
     border:none; width:100%; padding:16px; border-radius: 18px; font-family:'Quicksand'; font-weight:700; font-size:16.5px;
@@ -327,6 +327,35 @@
   }
 
   ::-webkit-scrollbar{width:0; height:0;}
+
+  /* ---------- PRINT / PDF REPORT ---------- */
+  .print-only{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printReport, #printReport *{visibility:visible;}
+    #printReport{
+      display:block; position:absolute; top:0; left:0; width:100%;
+      background:#fff; color:#1a1a1a; font-family:'Nunito', Arial, sans-serif;
+      padding:0; margin:0;
+    }
+    .pr-header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid #6A2FC4; padding-bottom:12px; margin-bottom:18px;}
+    .pr-title{font-family:'Quicksand', Arial, sans-serif; font-size:22px; font-weight:700; color:#1a1a1a;}
+    .pr-sub{font-size:12px; color:#555; margin-top:2px;}
+    .pr-meta{font-size:11px; color:#777; text-align:right;}
+    .pr-stats{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:22px;}
+    .pr-stat{border:1px solid #ddd; border-radius:8px; padding:10px 12px;}
+    .pr-stat .n{font-size:17px; font-weight:700; color:#1a1a1a;}
+    .pr-stat .l{font-size:10px; color:#777; text-transform:uppercase; letter-spacing:.3px; margin-top:2px;}
+    .pr-table{width:100%; border-collapse:collapse; font-size:11px; margin-bottom:30px;}
+    .pr-table th{background:#F1EEFB; color:#333; text-align:left; padding:7px 8px; border:1px solid #ddd; font-size:10px; text-transform:uppercase; letter-spacing:.2px;}
+    .pr-table td{padding:6px 8px; border:1px solid #ddd; color:#333;}
+    .pr-table tr:nth-child(even){background:#FAFAFC;}
+    .pr-sign{display:flex; justify-content:space-between; margin-top:50px; page-break-inside:avoid;}
+    .pr-sign-block{width:45%;}
+    .pr-sign-line{border-top:1px solid #333; margin-top:40px; padding-top:6px; font-size:11px; color:#555;}
+    .pr-footer{margin-top:26px; font-size:9.5px; color:#999; text-align:center;}
+    @page{ margin: 16mm 14mm; }
+  }
 </style>
 </head>
 <body>
@@ -420,10 +449,16 @@
       </div>
     </div>
 
-    <button class="add-past-btn" id="exportBtn" style="border-style:solid; border-color:var(--line); color:var(--lavender-darker);">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-      Export this month (.csv)
-    </button>
+    <div class="chip-row">
+      <button class="add-past-btn" id="exportBtn" style="border-style:solid; border-color:var(--line); color:var(--lavender-darker); flex:1;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        .csv
+      </button>
+      <button class="add-past-btn" id="exportPdfBtn" style="border-style:solid; border-color:var(--line); color:var(--lavender-darker); flex:1;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg>
+        PDF report
+      </button>
+    </div>
 
     <div class="stat-grid" id="statGrid"></div>
 
@@ -460,6 +495,7 @@
 </div>
 
 <div id="modal-root"></div>
+<div id="printReport" class="print-only"></div>
 
 <script>
 (function(){
@@ -467,7 +503,7 @@
 
   var STANDARD_MIN = 9*60;
   var STORAGE_KEY = 'worklog-lite-data-v1';
-  var state = { events: [], dayMeta: {}, nextId: 1, settings: { trackComp: true } };
+  var state = { events: [], dayMeta: {}, nextId: 1, settings: { trackComp: true, userName: '' } };
   var selectedLoc = 'home';
   var selectedAct = 'login';
   var selectedDayType = 'normal';
@@ -1246,6 +1282,9 @@
         '<div class="sheet">'+
           '<div class="sheet-handle"></div>'+
           '<h3>Settings</h3>'+
+          '<div class="section-label" style="margin-bottom:8px;">Your name</div>'+
+          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:10px; line-height:1.5;">Optional \u2014 shown on the PDF report for HR/manager handoff.</div>'+
+          '<input type="text" id="userNameInput" placeholder="e.g. Adam Sharieff" value="'+esc(state.settings.userName||'')+'" style="margin-bottom:18px;">'+
           '<div class="section-label" style="margin-bottom:10px;">Backup &amp; restore</div>'+
           '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:12px; line-height:1.5;">All data lives only on this device. Back it up regularly so nothing is lost if storage ever gets cleared.</div>'+
           '<div class="sheet-actions" style="margin-top:0;">'+
@@ -1258,6 +1297,10 @@
       '</div>';
     document.getElementById('sheetOverlay').onclick = function(e){ if(e.target.id==='sheetOverlay') closeSheet(); };
     document.getElementById('sClose').onclick = closeSheet;
+    document.getElementById('userNameInput').onchange = function(){
+      state.settings.userName = this.value.trim();
+      saveState();
+    };
     document.getElementById('backupBtn').onclick = exportBackupJSON;
     document.getElementById('restoreFileInput').onchange = function(e){
       var file = e.target.files && e.target.files[0];
@@ -1310,6 +1353,81 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  function esc(s){
+    return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function exportMonthPDF(){
+    var mKey = monthKey(overviewMonth);
+    var map = groupSessionsByDay();
+    var dates = Object.keys(map).concat(Object.keys(state.dayMeta)).filter(function(d){ return d.slice(0,7)===mKey; });
+    var uniq = {}; dates.forEach(function(d){ uniq[d]=true; });
+    dates = Object.keys(uniq).sort();
+
+    if(dates.length===0){
+      showToast('Nothing logged for '+MO[overviewMonth.getMonth()]+' '+overviewMonth.getFullYear()+' yet.');
+      return;
+    }
+
+    var totalWorked=0, totalRegular=0, totalOt=0, weekOffs=0, workDays=0, totalComp=0;
+    var tableRows = dates.map(function(d){
+      var sessions = map[d] || [];
+      var stats = dayStats(d, sessions);
+      if(stats.isWeekOff) weekOffs++; else if(stats.total>0) workDays++;
+      totalWorked += stats.total; totalRegular += stats.regular; totalOt += stats.ot;
+      totalComp += stats.compEarned;
+      var head = fmtDateHead(d);
+      var locs = {};
+      sessions.forEach(function(s){ if(s.start) locs[s.start.location]=true; });
+      var locList = Object.keys(locs).map(function(l){ return l==='home'?'Home':'Office'; }).join(' / ') || '\u2014';
+      var statusBits = [];
+      if(stats.isWeekOff) statusBits.push('Week off');
+      if(stats.compUsed>0) statusBits.push(fmtMin(stats.compUsed)+' comp used');
+      if(stats.compEarned>0) statusBits.push('+'+fmtMin(stats.compEarned)+' comp');
+      return '<tr>'+
+        '<td>'+esc(head.day+' '+MO[overviewMonth.getMonth()].slice(0,3))+'</td>'+
+        '<td>'+esc(head.wd)+'</td>'+
+        '<td>'+esc(locList)+'</td>'+
+        '<td>'+esc(fmtMin(stats.total))+'</td>'+
+        '<td>'+esc(fmtMin(stats.regular))+'</td>'+
+        '<td>'+esc(stats.ot>0?fmtMin(stats.ot):'\u2014')+'</td>'+
+        '<td>'+esc(statusBits.join(', ') || '\u2014')+'</td>'+
+      '</tr>';
+    }).join('');
+
+    var generatedOn = new Date();
+    var genStr = WD[generatedOn.getDay()]+', '+generatedOn.getDate()+' '+MO[generatedOn.getMonth()]+' '+generatedOn.getFullYear();
+    var nameLine = state.settings.userName ? ('<div class="pr-sub">'+esc(state.settings.userName)+'</div>') : '';
+
+    var html =
+      '<div class="pr-header">'+
+        '<div><div class="pr-title">WorkLog Lite &mdash; Attendance Report</div>'+
+        nameLine+
+        '<div class="pr-sub">'+esc(MO[overviewMonth.getMonth()]+' '+overviewMonth.getFullYear())+'</div></div>'+
+        '<div class="pr-meta">Generated '+esc(genStr)+'</div>'+
+      '</div>'+
+      '<div class="pr-stats">'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalWorked)+'</div><div class="l">Total worked</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalRegular)+'</div><div class="l">Regular hours</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalOt)+'</div><div class="l">Overtime</div></div>'+
+        '<div class="pr-stat"><div class="n">'+workDays+'</div><div class="l">Work days</div></div>'+
+        '<div class="pr-stat"><div class="n">'+weekOffs+'</div><div class="l">Week offs</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalComp)+'</div><div class="l">Comp earned this month</div></div>'+
+      '</div>'+
+      '<table class="pr-table">'+
+        '<thead><tr><th>Date</th><th>Day</th><th>Location</th><th>Worked</th><th>Regular</th><th>OT</th><th>Notes</th></tr></thead>'+
+        '<tbody>'+tableRows+'</tbody>'+
+      '</table>'+
+      '<div class="pr-sign">'+
+        '<div class="pr-sign-block"><div class="pr-sign-line">Employee signature'+(state.settings.userName?' ('+esc(state.settings.userName)+')':'')+' &nbsp;&nbsp;&nbsp; Date</div></div>'+
+        '<div class="pr-sign-block"><div class="pr-sign-line">Supervisor signature &nbsp;&nbsp;&nbsp; Date</div></div>'+
+      '</div>'+
+      '<div class="pr-footer">Generated by WorkLog Lite &middot; all times reflect the device this log was kept on</div>';
+
+    document.getElementById('printReport').innerHTML = html;
+    setTimeout(function(){ window.print(); }, 50);
   }
 
   /* ---------------- TOAST (self-contained, no native alert/confirm) ---------------- */
@@ -1479,6 +1597,7 @@
     document.getElementById('addPastBtn').onclick = function(){ openSessionSheet(null); };
     document.getElementById('settingsBtn').onclick = openSettingsSheet;
     document.getElementById('exportBtn').onclick = exportMonthCSV;
+    document.getElementById('exportPdfBtn').onclick = exportMonthPDF;
 
     loadState(function(){
       renderAll();
