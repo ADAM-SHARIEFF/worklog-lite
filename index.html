@@ -613,9 +613,12 @@
   }
 
   // Days with OT still available to convert (not week-off, has unconverted ot minutes), oldest first.
+  // Only the current calendar month's OT can be converted — not older months,
+  // so you can't accidentally "borrow" overtime that already closed out.
   function availableOtByDay(){
     var map = groupSessionsByDay();
-    var days = Object.keys(map);
+    var currentMonthKey = todayStr().slice(0,7);
+    var days = Object.keys(map).filter(function(d){ return d.slice(0,7)===currentMonthKey; });
     var list = [];
     days.forEach(function(d){
       var s = dayStats(d, map[d]);
@@ -1282,14 +1285,14 @@
 
           '<div class="section-label" style="margin-bottom:8px;">Convert overtime to comp</div>'+
           '<div style="font-size:13px; color:var(--ink-light); font-weight:700; line-height:1.5; margin-bottom:12px;">'+
-            'Available: <b style="color:var(--ink)">'+fmtMin(availMin)+'</b> \u00B7 pulled from your oldest unconverted OT first.'+
+            'Available this month: <b style="color:var(--ink)">'+fmtMin(availMin)+'</b> \u00B7 pulled from your oldest unconverted OT this month first. Earlier months can\'t be touched.'+
           '</div>'+
           (availMin>0 ?
             ('<div class="field"><label>Hours to convert</label>'+
               '<input type="number" min="0" step="0.5" max="'+(availMin/60)+'" id="otConvertInput" value="'+Math.min(1,(availMin/60))+'">'+
             '</div>'+
             '<button class="btn-secondary" id="mConvert" style="width:100%; margin-top:10px;">Convert to comp</button>') :
-            '<div class="empty" style="padding:6px 0;"><div class="msg">No unconverted overtime right now.</div></div>'
+            '<div class="empty" style="padding:6px 0;"><div class="msg">No unconverted overtime this month yet.</div></div>'
           )+
 
           '<div class="section-label" style="margin:20px 0 8px; padding-top:16px; border-top:1.5px dashed var(--line);">Convert comp back to overtime</div>'+
