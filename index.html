@@ -329,33 +329,8 @@
   ::-webkit-scrollbar{width:0; height:0;}
 
   /* ---------- PRINT / PDF REPORT ---------- */
-  .print-only{display:none;}
-  @media print{
-    body *{visibility:hidden;}
-    #printReport, #printReport *{visibility:visible;}
-    #printReport{
-      display:block; position:absolute; top:0; left:0; width:100%;
-      background:#fff; color:#1a1a1a; font-family:'Nunito', Arial, sans-serif;
-      padding:0; margin:0;
-    }
-    .pr-header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid #6A2FC4; padding-bottom:12px; margin-bottom:18px;}
-    .pr-title{font-family:'Quicksand', Arial, sans-serif; font-size:22px; font-weight:700; color:#1a1a1a;}
-    .pr-sub{font-size:12px; color:#555; margin-top:2px;}
-    .pr-meta{font-size:11px; color:#777; text-align:right;}
-    .pr-stats{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:22px;}
-    .pr-stat{border:1px solid #ddd; border-radius:8px; padding:10px 12px;}
-    .pr-stat .n{font-size:17px; font-weight:700; color:#1a1a1a;}
-    .pr-stat .l{font-size:10px; color:#777; text-transform:uppercase; letter-spacing:.3px; margin-top:2px;}
-    .pr-table{width:100%; border-collapse:collapse; font-size:11px; margin-bottom:30px;}
-    .pr-table th{background:#F1EEFB; color:#333; text-align:left; padding:7px 8px; border:1px solid #ddd; font-size:10px; text-transform:uppercase; letter-spacing:.2px;}
-    .pr-table td{padding:6px 8px; border:1px solid #ddd; color:#333;}
-    .pr-table tr:nth-child(even){background:#FAFAFC;}
-    .pr-sign{display:flex; justify-content:space-between; margin-top:50px; page-break-inside:avoid;}
-    .pr-sign-block{width:45%;}
-    .pr-sign-line{border-top:1px solid #333; margin-top:40px; padding-top:6px; font-size:11px; color:#555;}
-    .pr-footer{margin-top:26px; font-size:9.5px; color:#999; text-align:center;}
-    @page{ margin: 16mm 14mm; }
-  }
+  /* The report itself renders in its own downloaded file (see exportMonthPDF)
+     with its own inline stylesheet, so nothing print-specific is needed here. */
 </style>
 </head>
 <body>
@@ -495,7 +470,6 @@
 </div>
 
 <div id="modal-root"></div>
-<div id="printReport" class="print-only"></div>
 
 <script>
 (function(){
@@ -503,7 +477,7 @@
 
   var STANDARD_MIN = 9*60;
   var STORAGE_KEY = 'worklog-lite-data-v1';
-  var state = { events: [], dayMeta: {}, nextId: 1, settings: { trackComp: true, userName: '' } };
+  var state = { events: [], dayMeta: {}, nextId: 1, compAdjustments: [], otAdjustments: [], settings: { trackComp: true, userName: '' } };
   var selectedLoc = 'home';
   var selectedAct = 'login';
   var selectedDayType = 'normal';
@@ -519,6 +493,8 @@
         state.events = parsed.events || [];
         state.dayMeta = parsed.dayMeta || {};
         state.nextId = parsed.nextId || (state.events.length+1);
+        state.compAdjustments = parsed.compAdjustments || [];
+        state.otAdjustments = parsed.otAdjustments || [];
         state.settings = Object.assign({ trackComp: true }, parsed.settings || {});
       }
     }catch(e){ console.error('load failed', e); }
@@ -667,6 +643,44 @@
     }
     saveState();
   }
+
+  // Manual comp bank adjustments — for comp earned before this app was in use,
+  // or corrections. hoursDelta can be negative. Independent of logged sessions.
+  function totalManualAdjustmentMinutes(){
+    return (state.compAdjustments||[]).reduce(function(sum,a){ return sum + (a.hours*60); }, 0);
+  }
+  function addManualAdjustment(dateStr, hours, note){
+    state.compAdjustments.push({ id: state.nextId++, date: dateStr, hours: hours, note: note||'' });
+    saveState();
+  }
+  function deleteManualAdjustment(id){
+    state.compAdjustments = state.compAdjustments.filter(function(a){ return a.id!==id; });
+    saveState();
+  }
+
+  // Manual OT adjustments — either from converting comp back to OT, or logging
+  // past unpaid overtime that was never entered as sessions. hours can be negative.
+  function totalOtAdjustmentMinutes(){
+    return (state.otAdjustments||[]).reduce(function(sum,a){ return sum + (a.hours*60); }, 0);
+  }
+  function totalOtAdjustmentMinutesForMonth(mKey){
+    return (state.otAdjustments||[]).filter(function(a){ return a.date.slice(0,7)===mKey; })
+      .reduce(function(sum,a){ return sum + (a.hours*60); }, 0);
+  }
+  function addManualOtAdjustment(dateStr, hours, note){
+    state.otAdjustments.push({ id: state.nextId++, date: dateStr, hours: hours, note: note||'' });
+    saveState();
+  }
+  function deleteManualOtAdjustment(id){
+    state.otAdjustments = state.otAdjustments.filter(function(a){ return a.id!==id; });
+    saveState();
+  }
+  // Moves hours out of the comp bank and into payable OT, dated today.
+  function convertCompToOt(hours){
+    addManualAdjustment(todayStr(), -hours, 'Converted to OT');
+    addManualOtAdjustment(todayStr(), hours, 'Converted from comp');
+  }
+
 
   function getOpenSession(){
     var sessions = buildSessions();
@@ -831,13 +845,7 @@
     var dates = Object.keys(map).filter(function(d){ return d.slice(0,7)===mKey; }).sort();
 
     var totalWorked=0, totalRegular=0, totalOt=0, weekOffs=0, workDays=0;
-    var compBank = 0;
-
-    Object.keys(state.dayMeta).forEach(function(d){
-      var s = dayStats(d, map[d]||[]);
-      compBank += s.compEarned;
-      compBank -= s.compUsed;
-    });
+    var compBank = currentCompBankMinutes();
 
     var rows = dates.map(function(d){
       var s = dayStats(d, map[d]);
@@ -853,7 +861,7 @@
       '<div class="stat-card c3"><div class="num">'+fmtMin(totalOt)+'</div><div class="lbl">Overtime</div></div>'+
       '<div class="stat-card c4"><div class="num">'+workDays+'</div><div class="lbl">Work days</div></div>'+
       '<div class="stat-card c5"><div class="num">'+weekOffs+'</div><div class="lbl">Week offs</div></div>'+
-      '<div class="stat-card c6 tappable" id="compBankCard"><div class="num">'+fmtMin(Math.max(0,compBank))+'</div><div class="lbl">Comp bank</div><div class="tap-hint">Convert OT &rarr;</div></div>';
+      '<div class="stat-card c6 tappable" id="compBankCard"><div class="num">'+(compBank<0?'\u2212':'')+fmtMin(Math.abs(compBank))+'</div><div class="lbl">Comp bank</div><div class="tap-hint">Manage &rarr;</div></div>';
     document.getElementById('compBankCard').onclick = openConvertOtSheet;
 
     var listEl = document.getElementById('dailyList');
@@ -1233,45 +1241,178 @@
     };
   }
 
-  /* ---------------- CONVERT OT TO COMP SHEET ---------------- */
+  /* ---------------- COMP BANK SHEET (convert OT + manual entries) ---------------- */
+  function currentCompBankMinutes(){
+    var map = groupSessionsByDay();
+    var bank = 0;
+    Object.keys(state.dayMeta).forEach(function(d){
+      var s = dayStats(d, map[d]||[]);
+      bank += s.compEarned;
+      bank -= s.compUsed;
+    });
+    bank += totalManualAdjustmentMinutes();
+    return bank;
+  }
+
   function openConvertOtSheet(){
     var availMin = totalAvailableOtMinutes();
+    var bankMin = currentCompBankMinutes();
+    var compAdjustments = (state.compAdjustments||[]).slice().sort(function(a,b){ return a.date<b.date?1:-1; });
+    var otAdjustments = (state.otAdjustments||[]).slice().sort(function(a,b){ return a.date<b.date?1:-1; });
+
+    function adjRow(a, delAttr){
+      var head = fmtDateHead(a.date);
+      var signed = (a.hours>=0?'+':'\u2212')+fmtMin(Math.abs(a.hours)*60);
+      return '<div class="session-row" style="border-top:1px solid var(--line);">'+
+        '<div class="sicon" style="background:var(--gold); color:var(--gold-darker);">'+iconEdit()+'</div>'+
+        '<div class="stxt"><div class="srange">'+signed+'</div>'+
+        '<div class="smeta">'+head.full+(a.note?' \u00B7 '+esc(a.note):'')+'</div></div>'+
+        '<button class="sdel" '+delAttr+'="'+a.id+'">'+iconTrash()+'</button>'+
+      '</div>';
+    }
+    var compAdjRows = compAdjustments.map(function(a){ return adjRow(a,'data-adjdel'); }).join('');
+    var otAdjRows = otAdjustments.map(function(a){ return adjRow(a,'data-otadjdel'); }).join('');
+
     var root = document.getElementById('modal-root');
     root.innerHTML =
       '<div class="sheet-overlay" id="sheetOverlay">'+
         '<div class="sheet">'+
           '<div class="sheet-handle"></div>'+
-          '<h3>Convert OT to comp</h3>'+
-          '<div style="font-size:13.5px; color:var(--ink-light); font-weight:700; line-height:1.5; margin-bottom:14px;">'+
-            'Available to convert: <b style="color:var(--ink)">'+fmtMin(availMin)+'</b>'+
-            '<br>Pulled from your oldest unconverted overtime first.'+
+          '<h3>Comp bank</h3>'+
+
+          '<div class="section-label" style="margin-bottom:8px;">Convert overtime to comp</div>'+
+          '<div style="font-size:13px; color:var(--ink-light); font-weight:700; line-height:1.5; margin-bottom:12px;">'+
+            'Available: <b style="color:var(--ink)">'+fmtMin(availMin)+'</b> \u00B7 pulled from your oldest unconverted OT first.'+
           '</div>'+
-          (availMin<=0 ?
-            '<div class="empty" style="padding:10px 0 4px;"><div class="msg">No unconverted overtime right now.</div></div>' :
+          (availMin>0 ?
             ('<div class="field"><label>Hours to convert</label>'+
               '<input type="number" min="0" step="0.5" max="'+(availMin/60)+'" id="otConvertInput" value="'+Math.min(1,(availMin/60))+'">'+
-            '</div>')
+            '</div>'+
+            '<button class="btn-secondary" id="mConvert" style="width:100%; margin-top:10px;">Convert to comp</button>') :
+            '<div class="empty" style="padding:6px 0;"><div class="msg">No unconverted overtime right now.</div></div>'
           )+
-          '<div class="sheet-actions">'+
-            '<button class="btn-secondary" id="mCancel" style="flex:1;">'+(availMin<=0?'Close':'Cancel')+'</button>'+
-            (availMin>0 ? '<button class="btn-submit" id="mConvert" style="flex:1.4;">Convert</button>' : '')+
+
+          '<div class="section-label" style="margin:20px 0 8px; padding-top:16px; border-top:1.5px dashed var(--line);">Convert comp back to overtime</div>'+
+          '<div style="font-size:13px; color:var(--ink-light); font-weight:700; line-height:1.5; margin-bottom:12px;">'+
+            'Comp bank: <b style="color:var(--ink)">'+(bankMin<0?'\u2212':'')+fmtMin(Math.abs(bankMin))+'</b> \u00B7 moves hours out of comp and into OT owed to you.'+
           '</div>'+
+          (bankMin>0 ?
+            ('<div class="field"><label>Hours to convert</label>'+
+              '<input type="number" min="0" step="0.5" max="'+(bankMin/60)+'" id="compConvertInput" value="'+Math.min(1,(bankMin/60))+'">'+
+            '</div>'+
+            '<button class="btn-secondary" id="mConvertBack" style="width:100%; margin-top:10px;">Convert to OT</button>') :
+            '<div class="empty" style="padding:6px 0;"><div class="msg">No comp in the bank to convert right now.</div></div>'
+          )+
+
+          '<div class="section-label" style="margin:20px 0 8px; padding-top:16px; border-top:1.5px dashed var(--line);">Log a comp entry directly</div>'+
+          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:12px; line-height:1.5;">For comp you earned before using this app, or to correct the bank. Use a negative number to subtract.</div>'+
+          '<div class="field-row">'+
+            '<div class="field"><label>Date</label><input type="date" id="adjDate" value="'+todayStr()+'"></div>'+
+            '<div class="field"><label>Hours (&plusmn;)</label><input type="number" step="0.5" id="adjHours" value="1"></div>'+
+          '</div>'+
+          '<div class="field" style="margin-top:10px;"><label>Note (optional)</label><input type="text" id="adjNote" placeholder="e.g. comp from before I tracked this"></div>'+
+          '<button class="btn-secondary" id="mAddAdj" style="width:100%; margin-top:10px;">Add comp entry</button>'+
+
+          '<div class="section-label" style="margin:20px 0 8px; padding-top:16px; border-top:1.5px dashed var(--line);">Log an OT entry directly</div>'+
+          '<div style="font-size:12.5px; color:var(--ink-light); font-weight:600; margin-bottom:12px; line-height:1.5;">For overtime worked before using this app that still needs to be paid, or a correction. Use a negative number to subtract.</div>'+
+          '<div class="field-row">'+
+            '<div class="field"><label>Date</label><input type="date" id="otAdjDate" value="'+todayStr()+'"></div>'+
+            '<div class="field"><label>Hours (&plusmn;)</label><input type="number" step="0.5" id="otAdjHours" value="1"></div>'+
+          '</div>'+
+          '<div class="field" style="margin-top:10px;"><label>Note (optional)</label><input type="text" id="otAdjNote" placeholder="e.g. overtime from before I tracked this"></div>'+
+          '<button class="btn-secondary" id="mAddOtAdj" style="width:100%; margin-top:10px;">Add OT entry</button>'+
+
+          (compAdjRows ? ('<div class="section-label" style="margin:20px 0 4px; padding-top:16px; border-top:1.5px dashed var(--line);">Manual comp entries</div>'+compAdjRows) : '')+
+          (otAdjRows ? ('<div class="section-label" style="margin:20px 0 4px; padding-top:16px; border-top:1.5px dashed var(--line);">Manual OT entries</div>'+otAdjRows) : '')+
+
+          '<div class="sheet-actions"><button class="btn-secondary" id="mCancel" style="flex:1;">Done</button></div>'+
         '</div>'+
       '</div>';
+
     document.getElementById('sheetOverlay').onclick = function(e){ if(e.target.id==='sheetOverlay') closeSheet(); };
     document.getElementById('mCancel').onclick = closeSheet;
+
     if(availMin>0){
       document.getElementById('mConvert').onclick = function(){
         var inp = document.getElementById('otConvertInput');
         var hrs = parseFloat(inp.value)||0;
         hrs = Math.max(0, Math.min(hrs, availMin/60));
-        if(hrs<=0){ closeSheet(); return; }
+        if(hrs<=0) return;
         convertOtToComp(hrs*60);
-        closeSheet();
         renderAll();
         showToast(fmtMin(hrs*60)+' converted to comp.');
+        openConvertOtSheet();
       };
     }
+
+    if(bankMin>0){
+      document.getElementById('mConvertBack').onclick = function(){
+        var inp = document.getElementById('compConvertInput');
+        var hrs = parseFloat(inp.value)||0;
+        hrs = Math.max(0, Math.min(hrs, bankMin/60));
+        if(hrs<=0) return;
+        convertCompToOt(hrs);
+        renderAll();
+        showToast(fmtMin(hrs*60)+' converted to OT.');
+        openConvertOtSheet();
+      };
+    }
+
+    document.getElementById('mAddAdj').onclick = function(){
+      var d = document.getElementById('adjDate').value || todayStr();
+      var hrs = parseFloat(document.getElementById('adjHours').value)||0;
+      var note = document.getElementById('adjNote').value.trim();
+      if(hrs===0){ showToast('Enter a non-zero number of hours.'); return; }
+      addManualAdjustment(d, hrs, note);
+      renderAll();
+      showToast((hrs>0?'+':'')+fmtMin(hrs*60)+' added to comp bank.');
+      openConvertOtSheet();
+    };
+
+    document.getElementById('mAddOtAdj').onclick = function(){
+      var d = document.getElementById('otAdjDate').value || todayStr();
+      var hrs = parseFloat(document.getElementById('otAdjHours').value)||0;
+      var note = document.getElementById('otAdjNote').value.trim();
+      if(hrs===0){ showToast('Enter a non-zero number of hours.'); return; }
+      addManualOtAdjustment(d, hrs, note);
+      renderAll();
+      showToast((hrs>0?'+':'')+fmtMin(hrs*60)+' added to OT owed.');
+      openConvertOtSheet();
+    };
+
+    root.querySelectorAll('[data-adjdel]').forEach(function(btn){
+      btn.onclick = function(){
+        var id = parseInt(btn.dataset.adjdel,10);
+        openConfirmSheet({
+          title: 'Delete this entry?',
+          message: 'This removes it from your comp bank total. This cannot be undone.',
+          confirmLabel: 'Delete',
+          danger: true,
+          onConfirm: function(){
+            deleteManualAdjustment(id);
+            renderAll();
+            openConvertOtSheet();
+          }
+        });
+      };
+    });
+
+    root.querySelectorAll('[data-otadjdel]').forEach(function(btn){
+      btn.onclick = function(){
+        var id = parseInt(btn.dataset.otadjdel,10);
+        openConfirmSheet({
+          title: 'Delete this entry?',
+          message: 'This removes it from your OT owed total. This cannot be undone.',
+          confirmLabel: 'Delete',
+          danger: true,
+          onConfirm: function(){
+            deleteManualOtAdjustment(id);
+            renderAll();
+            openConvertOtSheet();
+          }
+        });
+      };
+    });
   }
 
   /* ---------------- SETTINGS SHEET ---------------- */
@@ -1371,37 +1512,106 @@
       return;
     }
 
+    function fmtDMY(d){
+      var head = fmtDateHead(d);
+      var mo = String(new Date(d+'T00:00:00').getMonth()+1).padStart(2,'0');
+      var day = String(head.day).padStart(2,'0');
+      return day+'-'+mo+'-'+new Date(d+'T00:00:00').getFullYear();
+    }
+
     var totalWorked=0, totalRegular=0, totalOt=0, weekOffs=0, workDays=0, totalComp=0;
-    var tableRows = dates.map(function(d){
-      var sessions = map[d] || [];
+    var totalHome=0, totalOffice=0, totalCompUsed=0, totalOtConverted=0;
+    var tableRows = [];
+
+    dates.forEach(function(d){
+      var sessions = (map[d]||[]).slice().sort(function(a,b){
+        var ta = a.start? dt(a.start.date,a.start.time).getTime() : (a.end?dt(a.end.date,a.end.time).getTime():0);
+        var tb = b.start? dt(b.start.date,b.start.time).getTime() : (b.end?dt(b.end.date,b.end.time).getTime():0);
+        return ta-tb;
+      });
       var stats = dayStats(d, sessions);
       if(stats.isWeekOff) weekOffs++; else if(stats.total>0) workDays++;
       totalWorked += stats.total; totalRegular += stats.regular; totalOt += stats.ot;
-      totalComp += stats.compEarned;
+      totalComp += stats.compEarned; totalCompUsed += stats.compUsed;
+      if(!stats.isWeekOff) totalOtConverted += (stats.otToCompHrs||0)*60;
+
       var head = fmtDateHead(d);
-      var locs = {};
-      sessions.forEach(function(s){ if(s.start) locs[s.start.location]=true; });
-      var locList = Object.keys(locs).map(function(l){ return l==='home'?'Home':'Office'; }).join(' / ') || '\u2014';
+      var dateStr = fmtDMY(d);
+
       var statusBits = [];
-      if(stats.isWeekOff) statusBits.push('Week off');
+      if(stats.isWeekOff){
+        statusBits.push('Week off'+(stats.compEarned>0?' (+'+fmtMin(stats.compEarned)+' comp earned)':''));
+      } else {
+        if(stats.otToCompHrs>0) statusBits.push(fmtMin(stats.otToCompHrs*60)+' OT \u2192 comp');
+        if(stats.ot>0) statusBits.push(fmtMin(stats.ot)+' OT not converted');
+      }
       if(stats.compUsed>0) statusBits.push(fmtMin(stats.compUsed)+' comp used');
-      if(stats.compEarned>0) statusBits.push('+'+fmtMin(stats.compEarned)+' comp');
-      return '<tr>'+
-        '<td>'+esc(head.day+' '+MO[overviewMonth.getMonth()].slice(0,3))+'</td>'+
-        '<td>'+esc(head.wd)+'</td>'+
-        '<td>'+esc(locList)+'</td>'+
-        '<td>'+esc(fmtMin(stats.total))+'</td>'+
-        '<td>'+esc(fmtMin(stats.regular))+'</td>'+
-        '<td>'+esc(stats.ot>0?fmtMin(stats.ot):'\u2014')+'</td>'+
-        '<td>'+esc(statusBits.join(', ') || '\u2014')+'</td>'+
-      '</tr>';
-    }).join('');
+      var dayNote = statusBits.join(', ');
+
+      if(sessions.length===0){
+        tableRows.push('<tr>'+
+          '<td>'+esc(dateStr)+'</td><td>'+esc(head.wd)+'</td><td>\u2014</td><td>\u2014</td><td>\u2014</td><td>\u2014</td>'+
+          '<td>\u2014</td><td>\u2014</td><td>\u2014</td><td>'+esc(dayNote||'\u2014')+'</td>'+
+        '</tr>');
+        return;
+      }
+
+      // Split each session's minutes into regular vs OT, filling the 9h daily
+      // cap in session order (week-off days are all comp-earning, not OT).
+      var regularAccum = 0;
+      sessions.forEach(function(s, idx){
+        var mins = sessionMinutes(s);
+        var regularPortion, otPortion;
+        if(stats.isWeekOff){
+          regularPortion = 0; otPortion = 0;
+        } else {
+          var remainingCap = Math.max(0, STANDARD_MIN - regularAccum);
+          regularPortion = Math.min(mins, remainingCap);
+          otPortion = mins - regularPortion;
+          regularAccum += regularPortion;
+        }
+        var loc = (s.start && s.start.location) || (s.end && s.end.location) || 'home';
+        if(loc==='home') totalHome += mins; else totalOffice += mins;
+        var startLabel = s.start ? fmtTime12(s.start.time) : '\u2014';
+        var endLabel = s.end ? (fmtTime12(s.end.time)+(s.start && s.end.date!==s.start.date ? ' ('+fmtDateHead(s.end.date).wd+')' : '')) : 'still working';
+        tableRows.push('<tr>'+
+          '<td>'+(idx===0?esc(dateStr):'')+'</td>'+
+          '<td>'+(idx===0?esc(head.wd):'')+'</td>'+
+          '<td>'+(idx+1)+'</td>'+
+          '<td>'+esc(loc==='home'?'Home':'Office')+'</td>'+
+          '<td>'+esc(startLabel)+'</td>'+
+          '<td>'+esc(endLabel)+'</td>'+
+          '<td>'+esc(fmtMin(mins))+'</td>'+
+          '<td>'+esc(regularPortion>0?fmtMin(regularPortion):'0m')+'</td>'+
+          '<td>'+esc(otPortion>0?fmtMin(otPortion):'0m')+'</td>'+
+          '<td>'+(idx===0?esc(dayNote||'\u2014'):'')+'</td>'+
+        '</tr>');
+      });
+    });
+
+    var lifetimeBank = currentCompBankMinutes();
+    var otAdjThisMonth = totalOtAdjustmentMinutesForMonth(mKey);
+    var totalOtOwed = totalOt + otAdjThisMonth;
 
     var generatedOn = new Date();
     var genStr = WD[generatedOn.getDay()]+', '+generatedOn.getDate()+' '+MO[generatedOn.getMonth()]+' '+generatedOn.getFullYear();
     var nameLine = state.settings.userName ? ('<div class="pr-sub">'+esc(state.settings.userName)+'</div>') : '';
 
-    var html =
+    var monthAdjRows = [];
+    (state.compAdjustments||[]).filter(function(a){ return a.date.slice(0,7)===mKey; }).forEach(function(a){
+      monthAdjRows.push('<tr><td>'+esc(fmtDMY(a.date))+'</td><td>Comp</td><td>'+(a.hours>=0?'+':'\u2212')+esc(fmtMin(Math.abs(a.hours)*60))+'</td><td>'+esc(a.note||'\u2014')+'</td></tr>');
+    });
+    (state.otAdjustments||[]).filter(function(a){ return a.date.slice(0,7)===mKey; }).forEach(function(a){
+      monthAdjRows.push('<tr><td>'+esc(fmtDMY(a.date))+'</td><td>OT</td><td>'+(a.hours>=0?'+':'\u2212')+esc(fmtMin(Math.abs(a.hours)*60))+'</td><td>'+esc(a.note||'\u2014')+'</td></tr>');
+    });
+    var adjSectionHTML = monthAdjRows.length ?
+      ('<div class="pr-sub" style="font-weight:700; color:#333; margin:18px 0 8px;">Manual adjustments this month</div>'+
+      '<table class="pr-table" style="margin-bottom:22px;">'+
+        '<thead><tr><th>Date</th><th>Type</th><th>Hours</th><th>Note</th></tr></thead>'+
+        '<tbody>'+monthAdjRows.join('')+'</tbody>'+
+      '</table>') : '';
+
+    var reportHTML =
       '<div class="pr-header">'+
         '<div><div class="pr-title">WorkLog Lite &mdash; Attendance Report</div>'+
         nameLine+
@@ -1411,23 +1621,78 @@
       '<div class="pr-stats">'+
         '<div class="pr-stat"><div class="n">'+fmtMin(totalWorked)+'</div><div class="l">Total worked</div></div>'+
         '<div class="pr-stat"><div class="n">'+fmtMin(totalRegular)+'</div><div class="l">Regular hours</div></div>'+
-        '<div class="pr-stat"><div class="n">'+fmtMin(totalOt)+'</div><div class="l">Overtime</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalHome)+'</div><div class="l">Hours at home</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalOffice)+'</div><div class="l">Hours at office</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalOt)+'</div><div class="l">Overtime (not converted)</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalOtConverted)+'</div><div class="l">OT converted to comp</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalComp)+'</div><div class="l">Comp earned this month</div></div>'+
+        '<div class="pr-stat"><div class="n">'+fmtMin(totalCompUsed)+'</div><div class="l">Comp used this month</div></div>'+
         '<div class="pr-stat"><div class="n">'+workDays+'</div><div class="l">Work days</div></div>'+
         '<div class="pr-stat"><div class="n">'+weekOffs+'</div><div class="l">Week offs</div></div>'+
-        '<div class="pr-stat"><div class="n">'+fmtMin(totalComp)+'</div><div class="l">Comp earned this month</div></div>'+
+        '<div class="pr-stat"><div class="n">'+(lifetimeBank<0?'\u2212':'')+fmtMin(Math.abs(lifetimeBank))+'</div><div class="l">Comp bank balance (all time)</div></div>'+
       '</div>'+
       '<table class="pr-table">'+
-        '<thead><tr><th>Date</th><th>Day</th><th>Location</th><th>Worked</th><th>Regular</th><th>OT</th><th>Notes</th></tr></thead>'+
-        '<tbody>'+tableRows+'</tbody>'+
+        '<thead><tr><th>Date</th><th>Day</th><th>Session</th><th>Location</th><th>Start Time</th><th>End Time</th><th>Worked</th><th>Regular</th><th>OT</th><th>Notes</th></tr></thead>'+
+        '<tbody>'+tableRows.join('')+'</tbody>'+
       '</table>'+
+      adjSectionHTML+
+      '<div class="pr-final">'+
+        '<div class="pr-final-label">Total overtime owed this month'+(otAdjThisMonth!==0?' (after adjustments)':'')+'</div>'+
+        '<div class="pr-final-num">'+(totalOtOwed<0?'\u2212':'')+fmtMin(Math.abs(totalOtOwed))+'</div>'+
+      '</div>'+
       '<div class="pr-sign">'+
         '<div class="pr-sign-block"><div class="pr-sign-line">Employee signature'+(state.settings.userName?' ('+esc(state.settings.userName)+')':'')+' &nbsp;&nbsp;&nbsp; Date</div></div>'+
         '<div class="pr-sign-block"><div class="pr-sign-line">Supervisor signature &nbsp;&nbsp;&nbsp; Date</div></div>'+
       '</div>'+
       '<div class="pr-footer">Generated by WorkLog Lite &middot; all times reflect the device this log was kept on</div>';
 
-    document.getElementById('printReport').innerHTML = html;
-    setTimeout(function(){ window.print(); }, 50);
+    var docHTML =
+      '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+      '<title>WorkLog Report \u2014 '+esc(MO[overviewMonth.getMonth()]+' '+overviewMonth.getFullYear())+'</title>'+
+      '<style>'+
+        'body{font-family:Arial, sans-serif; background:#fff; color:#1a1a1a; padding:24px; margin:0;}'+
+        '.pr-header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid #6A2FC4; padding-bottom:12px; margin-bottom:18px;}'+
+        '.pr-title{font-size:22px; font-weight:700; color:#1a1a1a;}'+
+        '.pr-sub{font-size:12px; color:#555; margin-top:2px;}'+
+        '.pr-meta{font-size:11px; color:#777; text-align:right;}'+
+        '.pr-stats{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:22px;}'+
+        '.pr-stat{border:1px solid #ddd; border-radius:8px; padding:10px 12px;}'+
+        '.pr-stat .n{font-size:17px; font-weight:700; color:#1a1a1a;}'+
+        '.pr-stat .l{font-size:10px; color:#777; text-transform:uppercase; letter-spacing:.3px; margin-top:2px;}'+
+        '.pr-table{width:100%; border-collapse:collapse; font-size:11px; margin-bottom:16px;}'+
+        '.pr-table th{background:#F1EEFB; color:#333; text-align:left; padding:7px 8px; border:1px solid #ddd; font-size:10px; text-transform:uppercase; letter-spacing:.2px; white-space:nowrap;}'+
+        '.pr-table td{padding:6px 8px; border:1px solid #ddd; color:#333; white-space:nowrap;}'+
+        '.pr-table tr:nth-child(even){background:#FAFAFC;}'+
+        '.pr-table tr{page-break-inside:avoid;}'+
+        '.pr-final{display:flex; justify-content:space-between; align-items:center; background:#F1EEFB; border-radius:8px; padding:14px 16px; margin:18px 0 10px; page-break-inside:avoid;}'+
+        '.pr-final-label{font-size:13px; font-weight:700; color:#333;}'+
+        '.pr-final-num{font-size:20px; font-weight:700; color:#6A2FC4;}'+
+        '.pr-sign{display:flex; justify-content:space-between; margin-top:50px; page-break-inside:avoid;}'+
+        '.pr-sign-block{width:45%;}'+
+        '.pr-sign-line{border-top:1px solid #333; margin-top:40px; padding-top:6px; font-size:11px; color:#555;}'+
+        '.pr-footer{margin-top:26px; font-size:9.5px; color:#999; text-align:center;}'+
+        '.pr-actions{margin-bottom:20px;}'+
+        '.pr-print-btn{font-family:Arial,sans-serif; font-weight:700; font-size:14px; padding:10px 18px; border-radius:10px; border:none; background:#6A2FC4; color:#fff; cursor:pointer;}'+
+        '.pr-hint{font-family:Arial,sans-serif; font-size:12px; color:#777; margin-left:12px;}'+
+        '@media print{ .pr-actions{display:none;} body{padding:0;} }'+
+        '@page{ size: landscape; margin: 14mm 12mm; }'+
+      '</style>'+
+      '</head><body>'+
+      '<div class="pr-actions"><button class="pr-print-btn" onclick="window.print()">Print / Save as PDF</button>'+
+      '<span class="pr-hint">Tap this, then choose "Save as PDF" as the destination.</span></div>'+
+      reportHTML+
+      '</body></html>';
+
+    var blob = new Blob([docHTML], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'WorkLog_Report_'+MO[overviewMonth.getMonth()]+'_'+overviewMonth.getFullYear()+'.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    showToast('Report downloaded \u2014 open it, then tap "Print / Save as PDF".');
   }
 
   /* ---------------- TOAST (self-contained, no native alert/confirm) ---------------- */
@@ -1464,6 +1729,8 @@
       events: state.events,
       dayMeta: state.dayMeta,
       nextId: state.nextId,
+      compAdjustments: state.compAdjustments,
+      otAdjustments: state.otAdjustments,
       settings: state.settings
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -1498,6 +1765,8 @@
           state.events = parsed.events || [];
           state.dayMeta = parsed.dayMeta || {};
           state.nextId = parsed.nextId || (state.events.length+1);
+          state.compAdjustments = parsed.compAdjustments || [];
+          state.otAdjustments = parsed.otAdjustments || [];
           state.settings = Object.assign({ trackComp: true }, parsed.settings || {});
           saveState();
           renderAll();
